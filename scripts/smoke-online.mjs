@@ -191,13 +191,15 @@ const gateDenied = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${gateR
 const gatePlayer = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${gateRoom.code}/connect?name=بازیکن-مجاز`);
 let gateSpectator;
 try {
-  await Promise.all([gateHost.opened, gateDenied.opened, gatePlayer.opened]);
+  await gateHost.opened;
   await gateHost.waitFor(m => m.type === 'welcome');
+  await gateDenied.opened;
   await gateDenied.waitFor(m => m.type === 'join-pending');
   const deniedRequest = await gateHost.waitFor(m => m.type === 'join-request' && m.request.name === 'مهمان-ردشده');
   gateHost.send({ type: 'join-decision', requestId: deniedRequest.request.requestId, allow: false });
   await gateDenied.waitFor(m => m.type === 'join-denied');
 
+  await gatePlayer.opened;
   await gatePlayer.waitFor(m => m.type === 'join-pending');
   const playerRequest = await gateHost.waitFor(m => m.type === 'join-request' && m.request.name === 'بازیکن-مجاز');
   gateHost.send({ type: 'join-decision', requestId: playerRequest.request.requestId, allow: true });
