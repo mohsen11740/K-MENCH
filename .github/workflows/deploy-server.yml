@@ -31,3 +31,6 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || (echo "Missing GitHub secret CLOUDFLARE_API_TOKEN" && exit 1)
           test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo "Missing GitHub secret CLOUDFLARE_ACCOUNT_ID" && exit 1)
           wrangler deploy --config wrangler.toml
+      - name: Verify public health endpoint
+        run: |
+          curl --retry 8 --retry-delay 5 --retry-all-errors -fsS https://k-mench-server.mohsen11740.workers.dev/health | node -e "let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const r=JSON.parse(s);if(!r.ok||r.service!=='k-mench-server')process.exit(1);console.log(s)})"
