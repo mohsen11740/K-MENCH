@@ -116,8 +116,11 @@ export class GameRoom extends DurableObject<Env> {
       return;
     }
     if (data.type === "start") {
-      if (player.id !== room.hostId || room.players.filter(p => p.connected).length < 2 || room.status !== "waiting") return;
-      room.status = "playing"; room.currentTurn = 0; await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room) }); return;
+      const connected = room.players.filter(p => p.connected).length;
+      if (player.id !== room.hostId || connected < 2 || room.status !== "waiting") return;
+      room.teamMode = !!data.teamMode; room.teamName = cleanName(data.teamName || "تیم باران"); room.league = typeof data.league === "string" ? data.league.slice(0, 40) : "دوستانه";
+      if (room.teamMode && connected !== 4) return;
+      room.status = "playing"; room.currentTurn = room.players.slice().sort((a,b)=>a.seat-b.seat)[0].seat; await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room) }); return;
     }
     if (data.type === "roll") {
       if (room.status !== "playing" || player.seat !== room.currentTurn || room.dice !== null) return;
