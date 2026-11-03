@@ -25,9 +25,14 @@ const BASES: [number, number][][] = [
 ]
 const STARTS = [0, 13, 26, 39]
 const names = ['قرمز', 'زرد', 'سبز', 'آبی']
+const IRANIAN_THEMES = [{id:'turquoise',name:'کاشی فیروزه‌ای',symbol:'✦'},{id:'miniature',name:'مینیاتور ایرانی',symbol:'❀'},{id:'isfahan',name:'فرش اصفهان',symbol:'✺'},{id:'dome',name:'گنبد فیروزه‌ای',symbol:'☼'},{id:'persepolis',name:'تخت جمشید',symbol:'𓃭'},{id:'paisley',name:'بته‌جقه',symbol:'❧'},{id:'garden',name:'باغ ایرانی',symbol:'❀'},{id:'khatam',name:'خاتم‌کاری',symbol:'✧'},{id:'pottery',name:'سفال ایرانی',symbol:'◉'},{id:'shahnameh',name:'شاهنامه',symbol:'⚔'}]
+const DICE_STYLES = [{id:'classic',name:'کلاسیک'},{id:'gold',name:'طلایی'},{id:'turquoise',name:'فیروزه‌ای'},{id:'ruby',name:'یاقوتی'},{id:'wood',name:'چوبی'},{id:'marble',name:'مرمری'},{id:'neon',name:'نئونی'},{id:'royal',name:'شاهانه'},{id:'persian',name:'ایرانی'},{id:'midnight',name:'شب'}]
 const freshTokens = (): Token[][] => Array.from({length:4}, () => Array.from({length:4}, () => ({progress:-1})))
 function App() {
   const [humanCount, setHumanCount] = useState(1)
+  const [localPlayerName, setLocalPlayerName] = useState(localStorage.getItem('k-mench-player-name') || 'باران')
+  const [themeId, setThemeId] = useState('turquoise')
+  const [diceStyle, setDiceStyle] = useState('classic')
   const [players, setPlayers] = useState<Player[]>([])
   const [tokens, setTokens] = useState<Token[][]>(freshTokens)
   const [turn, setTurn] = useState(0)
@@ -44,7 +49,7 @@ function App() {
   const [onlineError, setOnlineError] = useState('')
 
   const makePlayers = (count: number): Player[] => names.map((name, id) => ({
-    id, name: id < count ? (id === 0 ? 'بازیکن شما' : `بازیکن ${id+1}`) : `هوش مصنوعی ${id+1-count}`,
+    id, name: id < count ? (id === 0 ? (localPlayerName.trim() || 'بازیکن شما') : `بازیکن ${id+1}`) : `هوش مصنوعی ${id+1-count}`,
     color: COLORS[id], human: id < count, start: STARTS[id],
   }))
   const applyOnlineRoom = (room: any) => {
@@ -81,6 +86,7 @@ function App() {
       if ((onlineRoom?.players?.length || 0) < 2) { setMessage('برای شروع بازی آنلاین، دست‌کم دو بازیکن باید وارد اتاق شوند.'); return }
       onlineSocket.send(JSON.stringify({type:'start'})); return
     }
+    localStorage.setItem('k-mench-player-name', localPlayerName.trim() || 'باران')
     setPlayers(makePlayers(humanCount)); setTokens(freshTokens()); setTurn(0); setDice(null)
     setWinner(null); setGameStarted(true); setMessage('نوبت بازیکن قرمز است. تاس بیندازید.')
   }
@@ -172,7 +178,7 @@ function App() {
       <circle cx={x*40+20} cy={y*40+20} r="4" fill="#fff8e8"/>
     </g>
   }
-  return <main className="app-shell">
+  return <main className="app-shell" data-theme={themeId} data-dice={diceStyle}>
     <header className="topbar"><div className="brand"><img className="brand-logo" src="/icon.svg" alt="BM baran-mench" /><div><strong>BM</strong><small>baran-mench</small></div></div><div className="top-actions"><span className="online-pill"><i/> {onlineSocket ? 'بازی آنلاین' : 'بازی محلی'}</span><button className="icon-button" onClick={newInvite} aria-label="دعوت دوستان"><Share2 size={18}/></button></div></header>
     <section className="hero"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> دورهمی با رنگ‌وبوی ایرانی</span><h1>یک تاس، چهار رنگ،<br/><em>یک عالمه هیجان!</em></h1><p>منچ کلاسیک با حال‌وهوای تازه، برای بازی کنار خانواده و دوستان.</p><div className="hero-tags"><span>۴ مهره برای هر نفر</span><span>۱ تا ۴ بازیکن</span><span>هوش مصنوعی</span></div></div><div className="hero-art"><div className="sunburst">✦</div><div className="art-dice"><span>⚄</span></div><div className="art-token red"/><div className="art-token gold"/><div className="art-token green"/><div className="art-token blue"/></div></section>
     <section className="game-layout">
@@ -188,7 +194,7 @@ function App() {
         <div className="board-legend">{names.map((n,i)=><span key={n}><i style={{background:COLORS[i]}}/>{n}</span>)}</div>
       </div>
       <aside className="side-panel">
-        {!gameStarted ? <div className="setup-card"><span className="eyebrow">تنظیم بازی</span><h2>{onlineSocket ? "اتاق آنلاین ساخته شد" : "چند نفر بازی می‌کنید؟"}</h2><p>{onlineSocket ? (onlineError || "دوستتان را با کد دعوت وارد اتاق کنید.") : "جایگاه‌های خالی با هوش مصنوعی تکمیل می‌شوند."}</p><div className="count-picker">{[1,2,3,4].map(n=><button key={n} className={humanCount===n?'selected':''} onClick={()=>setHumanCount(n)}>{n}<small>{n===1?'نفر': 'نفر'}</small></button>)}</div><div className="seat-list">{(onlineSocket ? players : makePlayers(humanCount)).map(p=><div className="seat" key={p.id}><i style={{background:p.color}}/><span>{p.name}</span><small>{p.human?'انسان':'هوش مصنوعی'}</small></div>)}</div><button className="primary-button" disabled={!!onlineSocket && ((onlineRoom?.players?.filter((p:any) => p.connected).length || 0) < 2 || onlineSeat !== 0)} onClick={begin}><Gamepad2 size={18}/> {onlineSocket ? 'شروع بازی آنلاین' : 'شروع بازی'}</button></div> : <div className="control-card"><span className="eyebrow">کنترل بازی</span><h2>{winner!==null?'پایان بازی':players[turn]?.name}</h2><p>{onlineError || message}</p><div className={`dice-face ${rolling?'shake':''}`}><span>{dice===null?'⚄':['','⚀','⚁','⚂','⚃','⚄','⚅'][dice]}</span></div>{(onlineSocket ? onlineSeat===turn : players[turn]?.human) && gameStarted && winner===null && <button className="primary-button" disabled={rolling||dice!==null} onClick={()=>rollDice()}><Dice5 size={19}/>{rolling?'در حال انداختن تاس...':'انداختن تاس'}</button>}{dice!==null&&(onlineSocket ? onlineSeat===turn : players[turn]?.human)&&movable.length>0&&<small className="hint">یکی از مهره‌های روشن را روی صفحه انتخاب کنید.</small>}{winner!==null&&<button className="primary-button" onClick={onlineSocket ? newInvite : begin}><RotateCcw size={18}/> بازی دوباره</button>}<button className="subtle-button" onClick={newInvite}><Share2 size={16}/> دعوت از دوستان</button></div>}
+        {!gameStarted ? <div className="setup-card"><span className="eyebrow">تنظیم بازی</span><h2>{onlineSocket ? "اتاق آنلاین ساخته شد" : "چند نفر بازی می‌کنید؟"}</h2><p>{onlineSocket ? (onlineError || "دوستتان را با کد دعوت وارد اتاق کنید.") : "جایگاه‌های خالی با هوش مصنوعی تکمیل می‌شوند."}</p><label className="field-label">نام بازیکن اول<input className="player-name-input" value={localPlayerName} maxLength={18} onChange={e=>setLocalPlayerName(e.target.value)} placeholder="نام شما" /></label><div className="count-picker">{[1,2,3,4].map(n=><button key={n} className={humanCount===n?'selected':''} onClick={()=>setHumanCount(n)}>{n}<small>{n===1?'نفر': 'نفر'}</small></button>)}</div><div className="theme-picker"><strong>نقش ایرانی صفحه</strong><div className="theme-options">{IRANIAN_THEMES.map(t=><button type="button" key={t.id} className={themeId===t.id?'chosen':''} onClick={()=>setThemeId(t.id)}><span>{t.symbol}</span>{t.name}</button>)}</div></div><div className="theme-picker"><strong>مدل تاس</strong><div className="dice-options">{DICE_STYLES.map(d=><button type="button" key={d.id} className={diceStyle===d.id?'chosen':''} onClick={()=>setDiceStyle(d.id)}>{d.name}</button>)}</div></div><div className="seat-list">{(onlineSocket ? players : makePlayers(humanCount)).map(p=><div className="seat" key={p.id}><i style={{background:p.color}}/><span>{p.name}</span><small>{p.human?'انسان':'هوش مصنوعی'}</small></div>)}</div><button className="primary-button" disabled={!!onlineSocket && ((onlineRoom?.players?.filter((p:any) => p.connected).length || 0) < 2 || onlineSeat !== 0)} onClick={begin}><Gamepad2 size={18}/> {onlineSocket ? 'شروع بازی آنلاین' : 'شروع بازی'}</button></div> : <div className="control-card"><span className="eyebrow">کنترل بازی</span><h2>{winner!==null?'پایان بازی':players[turn]?.name}</h2><p>{onlineError || message}</p><div className={`dice-face ${rolling?'shake':''}`}><span>{dice===null?'⚄':['','⚀','⚁','⚂','⚃','⚄','⚅'][dice]}</span></div>{(onlineSocket ? onlineSeat===turn : players[turn]?.human) && gameStarted && winner===null && <button className="primary-button" disabled={rolling||dice!==null} onClick={()=>rollDice()}><Dice5 size={19}/>{rolling?'در حال انداختن تاس...':'انداختن تاس'}</button>}{dice!==null&&(onlineSocket ? onlineSeat===turn : players[turn]?.human)&&movable.length>0&&<small className="hint">یکی از مهره‌های روشن را روی صفحه انتخاب کنید.</small>}{winner!==null&&<button className="primary-button" onClick={onlineSocket ? newInvite : begin}><RotateCcw size={18}/> بازی دوباره</button>}<button className="subtle-button" onClick={newInvite}><Share2 size={16}/> دعوت از دوستان</button></div>}
         <div className="mini-stats"><div><Users size={18}/><strong>۴</strong><small>جایگاه بازی</small></div><div><Medal size={18}/><strong>۱۶</strong><small>مهره در میدان</small></div><div><Crown size={18}/><strong>۱</strong><small>قهرمان نهایی</small></div></div>
       </aside>
     </section>
