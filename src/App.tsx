@@ -57,6 +57,13 @@ function App() {
   const [onlineSeat, setOnlineSeat] = useState<number|null>(null)
   const [onlineSocket, setOnlineSocket] = useState<WebSocket|null>(null)
   const [onlineError, setOnlineError] = useState('')
+  const [joinRequests, setJoinRequests] = useState<{requestId:string;name:string;role:'player'|'spectator'}[]>([])
+  const [isSpectator, setIsSpectator] = useState(false)
+  const [moveHistory, setMoveHistory] = useState<{name:string;detail:string;time:string}[]>([])
+  const [soundEnabled, setSoundEnabled] = useState(()=>localStorage.getItem('k-mench-sound') !== 'off')
+  const [localStats, setLocalStats] = useState<Record<string,{wins:number;losses:number;captures:number;completed:number;moves:number}>>({})
+  const reconnectTimerRef = useRef<number | null>(null)
+  const reconnectEnabledRef = useRef(true)
   const [chatMessages, setChatMessages] = useState<{name:string;text:string;time:string;kind?:string;audio?:string}[]>([])
   const [chatDraft, setChatDraft] = useState('')
   const [league, setLeague] = useState('دوستانه')
@@ -138,22 +145,27 @@ function App() {
       const member = room.players?.find((p:any) => p.seat === id)
       return { id, name: member?.name || 'جایگاه خالی', color: COLORS[id], human: !!member, start: STARTS[id] }
     })
-    setPlayers(mapped); setTokens(room.tokens || freshTokens()); setTurn(room.currentTurn || 0)
+    setPlayers(mapped); setTokens(room.tokens || freshTokens()); setTurn(room.currentTurn || 0); setMoveHistory((room.history || []).slice(-30).reverse().map((h:any)=>({name:h.name,detail:h.detail,time:new Date(h.at).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})})))
     setDice(room.dice ?? null); setWinner(room.status === 'finished' ? room.currentTurn : null)
     if (room.status === 'finished') setMessage(room.teamMode ? `${room.winnerTeam || (room.currentTurn % 2 === 0 ? room.teamName : 'تیم رقیب')} برنده بازی تیمی شد!` : `${mapped[room.currentTurn]?.name || 'بازیکن'} برنده بازی شد!`)
     setGameStarted(room.status === 'playing' || room.status === 'finished')
   }
-  const connectOnline = (code: string) => {
+  const connectOnline = (code: string, role: 'player'|'spectator' = 'player') => {
+    reconnectEnabledRef.current = true
+    if (reconnectTimerRef.current) window.clearTimeout(reconnectTimerRef.current)
     const name = localStorage.getItem('k-mench-player-name') || 'بازیکن باران'
     const savedId = localStorage.getItem('k-mench-player-' + code)
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
-    const ws = new WebSocket(`${protocol}//k-mench-server.mohsen11740.workers.dev/api/rooms/${code}/connect?name=${encodeURIComponent(name)}${savedId ? '&playerId='+encodeURIComponent(savedId) : ''}`)
+    const ws = new WebSocket(`${protocol}//k-mench-server.mohsen11740.workers.dev/api/rooms/${code}/connect?name=${encodeURIComponent(name)}${savedId ? '&playerId='+encodeURIComponent(savedId) : ''}${!savedId && role==='spectator' ? '&role=spectator' : ''}`)
     setOnlineError('در حال اتصال به اتاق آنلاین...')
     ws.onmessage = event => {
       const data = JSON.parse(event.data)
+      if (data.type === 'join-pending') { setOnlineError(data.message || 'در انتظار تأیید میزبان...'); setInviteCode(code); setIsSpectator(role==='spectator') }
+      if (data.type === 'join-denied') { setOnlineError(data.message || 'درخواست ورود رد شد.'); reconnectEnabledRef.current = false; ws.close(1008, 'Denied') }
+      if (data.type === 'join-request') setJoinRequests(old=>[...old.filter(x=>x.requestId!==data.request.requestId),data.request])
       if (data.type === 'welcome') {
         localStorage.setItem('k-mench-player-' + code, data.playerId)
-        onlineSeatRef.current = data.seat; setOnlineSeat(data.seat); setInviteCode(code); applyOnlineRoom(data.room)
+        setIsSpectator(!!data.spectator); onlineSeatRef.current = data.seat; setOnlineSeat(data.seat); setInviteCode(code); setOnlineError(data.spectator ? 'به‌عنوان تماشاگر وارد اتاق شده‌اید.' : 'ورود شما تأیید شد.'); applyOnlineRoom(data.room)
         if (data.music) { setMusicUrl(data.music.url || ''); setMusicActive(!!data.music.playing); setMusicStartedAt(data.music.startedAt || null); setMusicConsent(data.music.consent || {}); setMusicAllowed(data.seat === 0) }
         setOnlineError('اتصال آنلاین برقرار است.')
       }
@@ -164,9 +176,10 @@ function App() {
       if (data.type === 'music-consent') setMusicConsent(data.consent || {})
     }
     ws.onerror = () => setOnlineError('اتصال به سرور برقرار نشد. سرور باید منتشر شده باشد.')
-    ws.onclose = () => setOnlineError('ارتباط اتاق قطع شد. برای اتصال دوباره از کد دعوت استفاده کنید.')
+    ws.onclose = (event) => { setOnlineError('ارتباط اتاق قطع شد. تلاش برای اتصال مجدد...'); if (reconnectEnabledRef.current && event.code !== 1008) reconnectTimerRef.current = window.setTimeout(()=>connectOnline(code, role), 1800) }
     setOnlineSocket(ws)
   }
+  const decideJoin = (requestId:string, allow:boolean, role?:'player'|'spectator') => { if (onlineSocket?.readyState===WebSocket.OPEN) onlineSocket.send(JSON.stringify({type:'join-decision',requestId,allow,role})); setJoinRequests(old=>old.filter(x=>x.requestId!==requestId)) }
   const begin = () => {
     if (onlineSocket) {
       const connected = onlineRoom?.players?.filter((p:any) => p.connected).length || 0
@@ -182,8 +195,9 @@ function App() {
     setWinner(null); setGameStarted(true); setMessage('نوبت بازیکن قرمز است. تاس بیندازید.')
   }
   useEffect(() => {
-    const code = new URLSearchParams(location.search).get('invite')?.toUpperCase()
-    if (code && /^[A-HJ-NP-Z2-9]{6}$/.test(code)) connectOnline(code)
+    const params = new URLSearchParams(location.search); const code = params.get('invite')?.toUpperCase(); const role = params.get('spectate') === '1' ? 'spectator' : 'player'
+    if (code && /^[A-HJ-NP-Z2-9]{6}$/.test(code)) connectOnline(code, role)
+    return () => { reconnectEnabledRef.current = false; if (reconnectTimerRef.current) window.clearTimeout(reconnectTimerRef.current) }
   }, [])
   useEffect(() => { if (!gameStarted || winner !== null || players.length === 0 || players[turn]?.human || rolling || dice !== null) return
     const timer = window.setTimeout(() => rollDice(true), 850)
@@ -227,9 +241,11 @@ function App() {
       })})
     }
     setTokens(next); setDice(null)
+    setMoveHistory(old=>[{name:players[turn]?.name||'بازیکن',detail:`مهره ${index+1} حرکت کرد${progress===57?' و به مقصد رسید':''}${captured?' و مهره حریف را زد':''}`,time:new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})},...old].slice(0,30))
+    setLocalStats(old=>{const n={...old};const st={wins:0,losses:0,captures:0,completed:0,moves:0,...n[String(turn)]};st.moves++;if(progress===57)st.completed++;if(captured)st.captures++;n[String(turn)]=st;return n})
     const teamSeats = turn % 2 === 0 ? [0, 2] : [1, 3]
     const hasWon = teamMode ? teamSeats.every(seat => next[seat].every(t => t.progress === 57)) : next[turn].every(t => t.progress === 57)
-    if (hasWon) { setWinner(turn); setMessage(teamMode ? `${turn % 2 === 0 ? teamName : 'تیم رقیب'} برنده بازی تیمی شد!` : `${players[turn].name} برنده بازی شد!`); return }
+    if (hasWon) { setLocalStats(old=>{const n={...old};players.forEach((p,i)=>{const st={wins:0,losses:0,captures:0,completed:0,moves:0,...n[String(i)]};if(teamMode ? i%2===turn%2 : i===turn)st.wins++;else st.losses++;n[String(i)]=st});return n}); setWinner(turn); setMessage(teamMode ? `${turn % 2 === 0 ? teamName : 'تیم رقیب'} برنده بازی تیمی شد!` : `${players[turn].name} برنده بازی شد!`); return }
     if (value === 6 || captured) setMessage(captured ? 'مهره حریف زده شد! یک نوبت اضافه دارید.' : 'شش آوردید! یک نوبت اضافه دارید.')
     else setTurn(t => (t+1)%4)
   }
@@ -243,8 +259,9 @@ function App() {
     if (!audio || !musicUrl) return
     if (!musicActive || (onlineSocket && !musicAllowed)) { audio.pause(); return }
     if (musicStartedAt) audio.currentTime = Math.max(0, (Date.now() - musicStartedAt) / 1000)
+    if (!soundEnabled) { audio.pause(); return }
     audio.play().catch(() => setOnlineError('برای پخش هم‌زمان موسیقی، هر بازیکن باید یک‌بار دکمه پخش را لمس کند.'))
-  }, [musicActive, musicStartedAt, musicUrl, musicAllowed, onlineSocket])
+  }, [musicActive, musicStartedAt, musicUrl, musicAllowed, onlineSocket, soundEnabled])
   useEffect(() => {
     if (onlineSocket || dice === null || players[turn]?.human || winner !== null) return
     const options = movable.map(t=>t.i)
@@ -262,6 +279,7 @@ function App() {
     return TRACK[(players[player].start+p)%52]
   }
   const newInvite = async () => {
+    reconnectEnabledRef.current = false; if (reconnectTimerRef.current) window.clearTimeout(reconnectTimerRef.current)
     onlineSocket?.close(); setOnlineSocket(null); setOnlineRoom(null); setOnlineSeat(null)
     try {
       const response = await fetch('https://k-mench-server.mohsen11740.workers.dev/api/rooms', {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({name:localStorage.getItem('k-mench-player-name') || 'میزبان'})})
@@ -276,6 +294,9 @@ function App() {
     if (navigator.share) { try { await navigator.share({title:'دعوت به K-MENCH',text,url}) } catch {} }
     else if (navigator.clipboard) { await navigator.clipboard.writeText(text); setMessage('متن دعوت کپی شد؛ آن را در پیام‌رسان دلخواه بفرستید.') }
   }
+  const teamCaptures = [0,1].map(team=>[team*1,team===0?2:3].reduce((sum,seat)=>sum+(onlineRoom?.stats?.[String(seat)]?.captures || localStats[String(seat)]?.captures || 0),0))
+  const teamCompleted = [0,1].map(team=>[team*1,team===0?2:3].reduce((sum,seat)=>sum+(onlineRoom?.stats?.[String(seat)]?.completed || localStats[String(seat)]?.completed || 0),0))
+  const mvp = players.map(p=>{const st=onlineRoom?.stats?.[String(p.id)]||localStats[String(p.id)]||{};return {name:p.name,score:(st.captures||0)*2+(st.completed||0)*3+(st.wins||0)*5}}).sort((a,b)=>b.score-a.score)[0]
   function tokenSvg(p:number, i:number, x:number,y:number) {
     const active = p === turn && dice !== null && movable.some(t=>t.i===i)
     return <g key={`${p}-${i}`} onClick={() => players[p]?.human && p===turn && moveToken(i)} className={active?'token active':'token'} style={{cursor:active?'pointer':'default'}}>
