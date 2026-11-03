@@ -61,6 +61,7 @@ try {
   if (state.room.players.filter((p) => p.connected).length !== 2) fail('Both players are not connected at game start');
 
   let moved = false;
+  let movedSeat = null;
   for (let attempt = 0; attempt < 60 && !moved; attempt++) {
     const seat = state.room.currentTurn;
     const active = seat === 0 ? host : guest;
@@ -80,6 +81,7 @@ try {
       if (h.room.tokens[seat][0] !== 0 || g.room.tokens[seat][0] !== 0) fail('Moved token did not synchronize to both players');
       if (JSON.stringify(h.room.tokens) !== JSON.stringify(g.room.tokens)) fail('Players received different game states');
       state = h;
+      movedSeat = seat;
       moved = true;
     }
   }
@@ -91,7 +93,8 @@ try {
     seats: [hostWelcome.seat, guestWelcome.seat],
     started: state.room.status === 'playing',
     synchronizedMove: true,
-    tokenProgress: state.room.tokens[state.room.currentTurn === 0 ? 0 : 0][0],
+    movedSeat,
+    tokenProgress: state.room.tokens[movedSeat][0],
   }));
 } finally {
   host.close();
