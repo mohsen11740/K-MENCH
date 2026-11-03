@@ -2,7 +2,7 @@ import type { CapacitorConfig } from '@capacitor/cli'
 
 const config: CapacitorConfig = {
   appId: 'ir.baran.kmench',
-  appName: 'BM',
+  appName: 'baran-mench',
   webDir: 'dist',
 }
 
