@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "deploy:server": "wrangler deploy --config wrangler.toml",
-    "dev:server": "wrangler dev --config wrangler.toml"
+    "dev:server": "wrangler dev --config wrangler.toml",
+    "desktop:build": "npm run build && electron-builder --win portable"
   },
   "dependencies": {
     "@vitejs/plugin-react": "^5.0.0",
@@ -24,6 +25,9 @@
     "@types/react": "^19.1.8",
     "@types/react-dom": "^19.1.8",
     "@capacitor/android": "^7.0.0",
-    "@capacitor/cli": "^7.0.0"
-  }
+    "@capacitor/cli": "^7.0.0",
+    "electron": "^37.2.6",
+    "electron-builder": "^26.0.12"
+  },
+  "main": "electron/main.cjs"
 }
