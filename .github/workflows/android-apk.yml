@@ -37,6 +37,14 @@ jobs:
         run: npx cap add android
       - name: Sync Capacitor
         run: npx cap sync android
+      - name: Prepare launcher icon from BM logo
+        run: |
+          python -m pip install --quiet cairosvg pillow
+          python - <<'PY'
+          import cairosvg
+          for name in ('icon-only', 'icon', 'splash'):
+              cairosvg.svg2png(url='assets/logo.svg', write_to=f'assets/{name}.png', output_width=1024, output_height=1024)
+          PY
       - name: Generate Android launcher icons
         run: npx --yes @capacitor/assets generate --android --assetPath assets --iconBackgroundColor '#071329' --splashBackgroundColor '#071329'
       - name: Build debug APK
