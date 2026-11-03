@@ -122,7 +122,7 @@ export class GameRoom extends DurableObject<Env> {
       const target = this.ctx.getWebSockets().find(ws => (ws.deserializeAttachment() as any)?.pendingRequestId === data.requestId);
       if (!pending || !target) { room.pendingJoins = room.pendingJoins.filter(p => p.requestId !== data.requestId); await this.save(); return; }
       room.pendingJoins = room.pendingJoins.filter(p => p.requestId !== data.requestId);
-      if (!data.allow) { try { target.send(JSON.stringify({ type: "join-denied", message: "میزبان درخواست ورود شما را نپذیرفت." })); target.close(1008, "Join denied"); } catch {} await this.save(); return; }
+      if (!data.allow) { try { target.send(JSON.stringify({ type: "join-denied", message: "میزبان درخواست ورود شما را نپذیرفت." })); target.close(1008, "Join denied"); } catch {} await this.save(); this.broadcast({ type: "presence", room: this.publicRoom(room) }); return; }
       if (pending.role === "spectator" || data.role === "spectator") {
         const sp = { id: crypto.randomUUID(), name: pending.name, connected: true, lastSeen: Date.now() }; room.spectators.push(sp);
         target.serializeAttachment({ playerId: sp.id, spectator: true }); await this.save();
