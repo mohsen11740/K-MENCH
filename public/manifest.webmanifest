@@ -1,0 +1,15 @@
+{
+  "name": "K-MENCH | بازی منچ باران",
+  "short_name": "K-MENCH",
+  "description": "بازی کلاسیک منچ با حال‌وهوای ایرانی",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#14251f",
+  "theme_color": "#14251f",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
