@@ -48,10 +48,14 @@ await host.opened;
 const guest = new Peer(url('بازیکن دوم'));
 try {
   await Promise.all([host.opened, guest.opened]);
-  const [hostWelcome, guestWelcome] = await Promise.all([
-    host.waitFor((m) => m.type === 'welcome'),
-    guest.waitFor((m) => m.type === 'welcome'),
-  ]);
+  const hostWelcome = await host.waitFor((m) => m.type === 'welcome');
+  const guestPending = await guest.waitFor((m) => m.type === 'join-pending');
+  const guestRequest = await host.waitFor((m) => m.type === 'join-request');
+  if (guestPending.role !== 'player' || guestRequest.request.name !== 'بازیکن دوم') fail('Guest was not held for host approval');
+  const approvedGuest = host.waitFor((m) => m.type === 'presence' && m.room.players.length === 2);
+  host.send({ type: 'join-decision', requestId: guestRequest.request.requestId, allow: true });
+  const guestWelcome = await guest.waitFor((m) => m.type === 'welcome');
+  await approvedGuest;
   if (hostWelcome.seat !== 0 || guestWelcome.seat !== 1) fail('Player seats are not assigned correctly');
   if (hostWelcome.room.players.length !== 1 || guestWelcome.room.players.length !== 2) fail('Room membership did not synchronize');
 
@@ -113,6 +117,7 @@ try {
       active.send({ type: 'move', token: 0 });
       const [h, g] = await Promise.all([movedHost, movedGuest]);
       if (h.room.tokens[seat][0] !== 0 || g.room.tokens[seat][0] !== 0) fail('Moved token did not synchronize to both players');
+      if (!h.room.history?.length || (h.room.stats?.[String(seat)]?.moves || 0) < 1) fail('Move history or player statistics were not recorded');
       if (JSON.stringify(h.room.tokens) !== JSON.stringify(g.room.tokens)) fail('Players received different game states');
       state = h;
       movedSeat = seat;
@@ -132,6 +137,8 @@ try {
     synchronizedVoicePayload: true,
     synchronizedMusicClock: true,
     perPlayerMusicConsent: true,
+    hostApprovedPlayerAdmission: true,
+    sharedMoveHistoryAndStats: true,
     teamRequiresFourPlayers: true,
     movedSeat,
     tokenProgress: state.room.tokens[movedSeat][0],
@@ -155,7 +162,14 @@ try {
     const peer = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${teamCreated.code}/connect?name=${encodeURIComponent('عضو تیم ' + (seat + 1))}`);
     teamPeers.push(peer);
     await peer.opened;
-    const welcome = await peer.waitFor((m) => m.type === 'welcome');
+    let welcome;
+    if (seat === 0) welcome = await peer.waitFor((m) => m.type === 'welcome');
+    else {
+      await peer.waitFor((m) => m.type === 'join-pending');
+      const request = await teamPeers[0].waitFor((m) => m.type === 'join-request' && m.request.name === 'عضو تیم ' + (seat + 1));
+      teamPeers[0].send({ type: 'join-decision', requestId: request.request.requestId, allow: true });
+      welcome = await peer.waitFor((m) => m.type === 'welcome');
+    }
     if (welcome.seat !== seat) fail('Team player seat assignment failed');
   }
   const startedEvents = teamPeers.map((peer) => peer.waitFor((m) => m.type === 'state' && m.room.status === 'playing'));
@@ -168,3 +182,24 @@ try {
 } finally {
   teamPeers.forEach((peer) => peer.close());
 }
+
+
+const gateRoomResponse = await fetch(`${BASE}/api/rooms`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ name: 'میزبان کنترل ورود' }) });
+const gateRoom = await gateRoomResponse.json();
+const gateHost = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${gateRoom.code}/connect?name=میزبان`);
+const gateSpectator = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${gateRoom.code}/connect?name=تماشاگر&role=spectator`);
+const gateDenied = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${gateRoom.code}/connect?name=مهمان-ردشده`);
+try {
+  await Promise.all([gateHost.opened, gateSpectator.opened, gateDenied.opened]);
+  await gateHost.waitFor(m => m.type === 'welcome');
+  await gateSpectator.waitFor(m => m.type === 'join-pending');
+  const spectatorRequest = await gateHost.waitFor(m => m.type === 'join-request' && m.request.role === 'spectator');
+  gateHost.send({ type: 'join-decision', requestId: spectatorRequest.request.requestId, allow: true });
+  const spectatorWelcome = await gateSpectator.waitFor(m => m.type === 'welcome');
+  if (!spectatorWelcome.spectator || spectatorWelcome.seat !== null) fail('Approved spectator received a player seat');
+  await gateDenied.waitFor(m => m.type === 'join-pending');
+  const deniedRequest = await gateHost.waitFor(m => m.type === 'join-request' && m.request.name === 'مهمان-ردشده');
+  gateHost.send({ type: 'join-decision', requestId: deniedRequest.request.requestId, allow: false });
+  await gateDenied.waitFor(m => m.type === 'join-denied');
+  console.log(JSON.stringify({ ok: true, test: 'host-admission-and-spectator-gate', approvedSpectator: true, rejectedGuestBlocked: true }));
+} finally { gateHost.close(); gateSpectator.close(); gateDenied.close(); }
