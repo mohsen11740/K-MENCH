@@ -28,3 +28,30 @@
 @media(max-width:800px){.app-shell:has(.control-card){padding-left:8px;padding-right:8px}.app-shell:has(.control-card) .topbar,.app-shell:has(.control-card) .hero,.app-shell:has(.control-card) .features,.app-shell:has(.control-card) footer{display:none}.app-shell:has(.control-card) .game-layout{display:flex;flex-direction:column;margin:8px 0;gap:8px}.app-shell:has(.control-card) .board-card{padding:9px;border-radius:16px}.app-shell:has(.control-card) .section-heading{margin-bottom:7px}.app-shell:has(.control-card) .board-wrap{max-width:min(94vw,580px)}.app-shell:has(.control-card) .side-panel{gap:8px}.app-shell:has(.control-card) .control-card{padding:10px 14px}.app-shell:has(.control-card) .mini-stats{display:none}}
 
 .player-name-list{margin:12px 0;padding:12px;border:1px solid #e6dcc6;border-radius:14px;background:#fbf7ec}.player-name-list>strong{display:block;font-size:12px;color:#344a3c;margin-bottom:8px}.player-name-list .field-label{margin:9px 0}.player-name-list .field-label:last-child{margin-bottom:0}
+
+
+/* Three-dimensional dice and social play controls */
+.dice-center{position:absolute;z-index:3;left:50%;top:50%;width:76px;height:76px;transform:translate(-50%,-50%) rotateX(-18deg) rotateY(22deg);display:grid;place-items:center;border-radius:19px;background:linear-gradient(145deg,#fffdf4,#d8c49a);border:1px solid #fff;box-shadow:inset -5px -6px 12px #9b82504c,inset 4px 5px 10px #fff,0 14px 25px #18251d70,0 0 0 5px #ffffff40;color:#a6473d;font-size:58px;pointer-events:none;perspective:600px}
+.dice-center span{display:block;text-shadow:0 2px 0 #fff,0 5px 8px #7a4a3340;transform:translateZ(12px)}
+.dice-center.rolling{animation:dice-tumble .68s cubic-bezier(.2,.8,.25,1) infinite}
+.board-wrap{position:relative}
+@keyframes dice-tumble{0%{transform:translate(-50%,-50%) rotateX(0) rotateY(0) rotateZ(0) scale(.85)}45%{transform:translate(-50%,-58%) rotateX(250deg) rotateY(210deg) rotateZ(160deg) scale(1.12)}100%{transform:translate(-50%,-50%) rotateX(540deg) rotateY(420deg) rotateZ(360deg) scale(1)}}
+.social-card{background:#fffaf0;border:1px solid #e2d8c1;border-radius:18px;padding:13px;display:grid;gap:10px}
+.social-card>strong,.social-head strong{font-size:12px;color:#304538}
+.social-head{display:flex;align-items:center;justify-content:space-between}
+.chat-feed{max-height:190px;overflow:auto;display:flex;flex-direction:column;gap:8px}
+.chat-message{background:#f3eedf;border-radius:11px;padding:8px 10px;font-size:11px}
+.chat-message b{color:#304538;margin-left:8px}.chat-message small{color:#99917d;font-size:9px}
+.chat-message p{margin:5px 0 0;overflow-wrap:anywhere;line-height:1.7}
+.chat-message audio{width:100%;height:34px;margin-top:6px}
+.chat-compose{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:6px;align-items:center}
+.chat-compose .player-name-input{min-width:0;padding:9px;font-size:11px}
+.chat-send{border:0;border-radius:9px;padding:9px 11px;background:#203a2d;color:#fffaf0;font:inherit;font-size:10px;cursor:pointer}
+.chat-send.recording{background:#a9433b;animation:pulse 1s infinite alternate}
+.music-controls{display:flex;align-items:center;gap:7px;flex-wrap:wrap}
+.music-controls audio{width:100%;height:36px}
+.rules-modal{text-align:right;max-height:85vh;overflow:auto}
+.rules-modal h2{color:#263d30}
+.rules-modal li{font-size:12px;line-height:2;margin:6px 0;color:#5d6657}
+.shared-music-audio{display:none}
+@media(max-width:800px){.app-shell:has(.control-card) .dice-center{width:66px;height:66px;font-size:50px}.app-shell:has(.control-card) .social-card{padding:10px}.app-shell:has(.control-card) .game-layout{overflow:visible}}
