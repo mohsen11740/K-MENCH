@@ -88,10 +88,25 @@ export class GameRoom extends DurableObject<Env> {
 
   async webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
     const room = await this.load(); if (!room) return;
-    let data: { type?: string; token?: number; name?: string } = {};
+    let data: { type?: string; token?: number; name?: string; message?: any; url?: string; playing?: boolean } = {};
     try { data = JSON.parse(typeof message === "string" ? message : new TextDecoder().decode(message)); } catch { return; }
     const attachment = socket.deserializeAttachment() as { playerId?: string } | null;
     const player = room.players.find(p => p.id === attachment?.playerId); if (!player) return;
+    if (data.type === "chat" || data.type === "voice") {
+      if (!data.message || typeof data.message.text !== "string") return;
+      const textValue = data.message.text.slice(0, data.type === "voice" ? 20 : 500);
+      const audio = data.type === "voice" && typeof data.message.audio === "string" && data.message.audio.length <= 1200000 ? data.message.audio : undefined;
+      if (data.type === "voice" && !audio) return;
+      const message = { name: player.name, text: textValue, time: new Date().toISOString(), ...(audio ? { kind: "voice", audio } : {}) };
+      this.broadcast({ type: data.type, message });
+      return;
+    }
+    if (data.type === "music") {
+      if (player.id !== room.hostId) return;
+      const url = typeof data.url === "string" && /^https:\/\//i.test(data.url) ? data.url.slice(0, 1000) : "";
+      this.broadcast({ type: "music", url, playing: !!data.playing });
+      return;
+    }
     if (data.type === "rename") {
       if (typeof data.name !== "string") return;
       player.name = cleanName(data.name);
