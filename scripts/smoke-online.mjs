@@ -119,3 +119,31 @@ try {
   host.close();
   guest.close();
 }
+
+
+const teamCreatedResponse = await fetch(`${BASE}/api/rooms`, {
+  method: 'POST',
+  headers: { 'content-type': 'application/json' },
+  body: JSON.stringify({ name: 'میزبان لیگ تیمی' }),
+});
+const teamCreated = await teamCreatedResponse.json();
+if (!teamCreatedResponse.ok || !teamCreated.ok) fail('Team room creation failed');
+const teamPeers = [];
+try {
+  for (let seat = 0; seat < 4; seat++) {
+    const peer = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${teamCreated.code}/connect?name=${encodeURIComponent('عضو تیم ' + (seat + 1))}`);
+    teamPeers.push(peer);
+    await peer.opened;
+    const welcome = await peer.waitFor((m) => m.type === 'welcome');
+    if (welcome.seat !== seat) fail('Team player seat assignment failed');
+  }
+  const startedEvents = teamPeers.map((peer) => peer.waitFor((m) => m.type === 'state' && m.room.status === 'playing'));
+  teamPeers[0].send({ type: 'start', teamMode: true, teamName: 'تیم باران', league: 'جام باران' });
+  const teamStates = await Promise.all(startedEvents);
+  if (!teamStates.every((event) => event.room.teamMode && event.room.teamName === 'تیم باران' && event.room.league === 'جام باران')) {
+    fail('Four-player team and league settings did not synchronize');
+  }
+  console.log(JSON.stringify({ ok: true, test: 'four-player-team-league', room: teamCreated.code, teamMode: true, league: 'جام باران' }));
+} finally {
+  teamPeers.forEach((peer) => peer.close());
+}
