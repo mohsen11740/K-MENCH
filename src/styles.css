@@ -26,3 +26,5 @@
 .dice-options{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
 .app-shell[data-theme] .hero{background:var(--theme-deep)}
 @media(max-width:800px){.app-shell:has(.control-card){padding-left:8px;padding-right:8px}.app-shell:has(.control-card) .topbar,.app-shell:has(.control-card) .hero,.app-shell:has(.control-card) .features,.app-shell:has(.control-card) footer{display:none}.app-shell:has(.control-card) .game-layout{display:flex;flex-direction:column;margin:8px 0;gap:8px}.app-shell:has(.control-card) .board-card{padding:9px;border-radius:16px}.app-shell:has(.control-card) .section-heading{margin-bottom:7px}.app-shell:has(.control-card) .board-wrap{max-width:min(94vw,580px)}.app-shell:has(.control-card) .side-panel{gap:8px}.app-shell:has(.control-card) .control-card{padding:10px 14px}.app-shell:has(.control-card) .mini-stats{display:none}}
+
+.player-name-list{margin:12px 0;padding:12px;border:1px solid #e6dcc6;border-radius:14px;background:#fbf7ec}.player-name-list>strong{display:block;font-size:12px;color:#344a3c;margin-bottom:8px}.player-name-list .field-label{margin:9px 0}.player-name-list .field-label:last-child{margin-bottom:0}
