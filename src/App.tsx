@@ -59,7 +59,7 @@ function App() {
   const savePlayerName = (seat: number) => {
     const current = players[seat]?.name?.trim()
     if (!current) return
-    if (seat === 0) localStorage.setItem('k-mench-player-name', current)
+    if (seat === 0 || (onlineSocket && seat === onlineSeat)) localStorage.setItem('k-mench-player-name', current)
     const saved = players.map((player, index) => index === seat ? current : player.name)
     localStorage.setItem('k-mench-player-names', JSON.stringify(saved))
   }
