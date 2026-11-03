@@ -1,0 +1,45 @@
+name: Build Windows Desktop
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'public/**'
+      - 'assets/**'
+      - 'electron/**'
+      - 'index.html'
+      - 'vite.config.ts'
+      - 'package.json'
+      - '.github/workflows/windows-desktop.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Create Windows icon from BM logo
+        shell: pwsh
+        run: |
+          python -m pip install --quiet cairosvg pillow
+          New-Item -ItemType Directory -Force build | Out-Null
+          python -c "import cairosvg; from PIL import Image; cairosvg.svg2png(url='assets/logo.svg', write_to='build/icon.png', output_width=256, output_height=256); Image.open('build/icon.png').save('build/icon.ico', sizes=[(256,256),(128,128),(64,64),(32,32),(16,16)])"
+      - name: Build Windows portable EXE
+        run: npm run desktop:build
+      - name: Upload Windows app
+        uses: actions/upload-artifact@v4
+        with:
+          name: BM-baran-mench-Windows
+          path: release/*.exe
+          if-no-files-found: error
+          retention-days: 30
