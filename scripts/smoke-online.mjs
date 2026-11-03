@@ -44,6 +44,7 @@ if (!response.ok || !created.ok || !/^[A-HJ-NP-Z2-9]{6}$/.test(created.code)) fa
 
 const url = (name) => `${BASE.replace('https:', 'wss:')}/api/rooms/${created.code}/connect?name=${encodeURIComponent(name)}`;
 const host = new Peer(url('بازیکن اول'));
+await host.opened;
 const guest = new Peer(url('بازیکن دوم'));
 try {
   await Promise.all([host.opened, guest.opened]);
@@ -54,9 +55,24 @@ try {
   if (hostWelcome.seat !== 0 || guestWelcome.seat !== 1) fail('Player seats are not assigned correctly');
   if (hostWelcome.room.players.length !== 1 || guestWelcome.room.players.length !== 2) fail('Room membership did not synchronize');
 
+  host.send({ type: 'rename', name: 'میزبان ویرایش‌شده' });
+  const renamed = await guest.waitFor((m) => m.type === 'presence' && m.room.players.some((p) => p.name === 'میزبان ویرایش‌شده'));
+  if (!renamed.room.players.some((p) => p.name === 'میزبان ویرایش‌شده')) fail('Online player rename did not synchronize');
+
+  const hostMusic = host.waitFor((m) => m.type === 'music' && m.playing);
+  const guestMusic = guest.waitFor((m) => m.type === 'music' && m.playing);
+  host.send({ type: 'music', url: 'https://example.com/test-track.mp3', playing: true });
+  const [musicA, musicB] = await Promise.all([hostMusic, guestMusic]);
+  if (!musicA.startedAt || musicA.startedAt !== musicB.startedAt || musicA.url !== musicB.url) fail('Music state did not synchronize');
+
+  host.send({ type: 'start', teamMode: true, teamName: 'تیم آزمایشی' });
+  await new Promise((resolve) => setTimeout(resolve, 250));
+  const waiting = await fetch(`${BASE}/api/rooms/${created.code}/status`).then((r) => r.json());
+  if (waiting.room.status !== 'waiting') fail('Two-player team room started without all four players');
+
   const hostStarted = host.waitFor((m) => m.type === 'state' && m.room.status === 'playing');
   const guestStarted = guest.waitFor((m) => m.type === 'state' && m.room.status === 'playing');
-  host.send({ type: 'start' });
+  host.send({ type: 'start', league: 'دوستانه', teamMode: false });
   let [state, guestState] = await Promise.all([hostStarted, guestStarted]);
   if (state.room.players.filter((p) => p.connected).length !== 2) fail('Both players are not connected at game start');
 
@@ -93,6 +109,9 @@ try {
     seats: [hostWelcome.seat, guestWelcome.seat],
     started: state.room.status === 'playing',
     synchronizedMove: true,
+    synchronizedRename: true,
+    synchronizedMusicClock: true,
+    teamRequiresFourPlayers: true,
     movedSeat,
     tokenProgress: state.room.tokens[movedSeat][0],
   }));
