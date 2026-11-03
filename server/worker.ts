@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 type Player = { id: string; name: string; seat: number; connected: boolean; lastSeen: number };
-type Room = { code: string; status: "waiting" | "playing" | "finished"; hostId: string | null; players: Player[]; currentTurn: number; dice: number | null; tokens: number[][]; createdAt: number; updatedAt: number };
+type Room = { code: string; status: "waiting" | "playing" | "finished"; hostId: string | null; players: Player[]; currentTurn: number; dice: number | null; tokens: number[][]; teamMode: boolean; teamName: string; league: string; leagueWins: Record<string, number>; music: { url: string; playing: boolean; startedAt: number | null }; createdAt: number; updatedAt: number };
 const headers = { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" };
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers });
 function makeCode() { const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from(crypto.getRandomValues(new Uint8Array(6)), n => chars[n % chars.length]).join(""); }
@@ -51,7 +51,7 @@ export class GameRoom extends DurableObject<Env> {
     if (url.pathname === "/create" && request.method === "POST") {
       const data = await request.json() as { code: string; name: string };
       if (await this.load()) return json({ ok: false, error: "این کد قبلاً استفاده شده است." }, 409);
-      this.room = { code: data.code, status: "waiting", hostId: null, players: [], currentTurn: 0, dice: null, tokens: Array.from({ length: 4 }, () => Array(4).fill(-1)), createdAt: Date.now(), updatedAt: Date.now() };
+      this.room = { code: data.code, status: "waiting", hostId: null, players: [], currentTurn: 0, dice: null, tokens: Array.from({ length: 4 }, () => Array(4).fill(-1)), teamMode: false, teamName: "تیم باران", league: "دوستانه", leagueWins: {}, music: { url: "", playing: false, startedAt: null }, createdAt: Date.now(), updatedAt: Date.now() };
       await this.save();
       return json({ ok: true, code: data.code, maxPlayers: 4, status: "waiting" });
     }
@@ -79,7 +79,7 @@ export class GameRoom extends DurableObject<Env> {
       await this.save();
       const pair = new WebSocketPair(); const client = pair[0]; const server = pair[1];
       this.ctx.acceptWebSocket(server); server.serializeAttachment({ playerId: player.id });
-      server.send(JSON.stringify({ type: "welcome", playerId: player.id, seat: player.seat, room: this.publicRoom(room) }));
+      server.send(JSON.stringify({ type: "welcome", playerId: player.id, seat: player.seat, room: this.publicRoom(room), music: room.music }));
       this.broadcast({ type: "presence", room: this.publicRoom(room) });
       return new Response(null, { status: 101, webSocket: client });
     }
@@ -88,7 +88,7 @@ export class GameRoom extends DurableObject<Env> {
 
   async webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
     const room = await this.load(); if (!room) return;
-    let data: { type?: string; token?: number; name?: string; message?: any; url?: string; playing?: boolean } = {};
+    let data: { type?: string; token?: number; name?: string; message?: any; url?: string; playing?: boolean; startedAt?: number; league?: string; teamMode?: boolean; teamName?: string } = {};
     try { data = JSON.parse(typeof message === "string" ? message : new TextDecoder().decode(message)); } catch { return; }
     const attachment = socket.deserializeAttachment() as { playerId?: string } | null;
     const player = room.players.find(p => p.id === attachment?.playerId); if (!player) return;
@@ -104,7 +104,8 @@ export class GameRoom extends DurableObject<Env> {
     if (data.type === "music") {
       if (player.id !== room.hostId) return;
       const url = typeof data.url === "string" && /^https:\/\//i.test(data.url) ? data.url.slice(0, 1000) : "";
-      this.broadcast({ type: "music", url, playing: !!data.playing });
+      room.music = { url, playing: !!data.playing && !!url, startedAt: !!data.playing && !!url ? Date.now() : null };
+      await this.save(); this.broadcast({ type: "music", ...room.music });
       return;
     }
     if (data.type === "rename") {
@@ -123,7 +124,7 @@ export class GameRoom extends DurableObject<Env> {
       room.dice = crypto.getRandomValues(new Uint32Array(1))[0] % 6 + 1;
       const canMove = room.tokens[player.seat].some(progress => progress < 0 ? room.dice === 6 : progress + room.dice! <= 57);
       if (!canMove) {
-        const rolled = room.dice; room.dice = null; room.currentTurn = (room.currentTurn + 1) % room.players.length;
+        const rolled = room.dice; room.dice = null; room.currentTurn = this.nextSeat(room, player.seat);
         await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "skip", seat: player.seat, value: rolled } }); return;
       }
       await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "roll", seat: player.seat, value: room.dice } }); return;
@@ -146,10 +147,18 @@ export class GameRoom extends DurableObject<Env> {
         }
       }
       room.dice = null;
-      if (room.tokens[player.seat].every(p => p === 57)) room.status = "finished";
-      else if (value !== 6 && !captured) room.currentTurn = (room.currentTurn + 1) % room.players.length;
-      await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "move", seat: player.seat, token, progress: next, captured } });
+      const teammates = room.teamMode ? (player.seat % 2 === 0 ? [0, 2] : [1, 3]) : [player.seat];
+      const teamWon = teammates.every(seat => room.tokens[seat].every(p => p === 57));
+      if (teamWon) { room.status = "finished"; const key = `${room.league}:${room.teamMode ? "team" : "solo"}`; room.leagueWins[key] = (room.leagueWins[key] || 0) + 1; }
+      else if (value !== 6 && !captured) room.currentTurn = this.nextSeat(room, player.seat);
+      await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "move", seat: player.seat, token, progress: next, captured, teamWon } });
     }
+  }
+
+  private nextSeat(room: Room, current: number) {
+    const seats = room.players.map(p => p.seat).sort((a,b)=>a-b);
+    if (!seats.length) return 0;
+    return seats.find(seat => seat > current) ?? seats[0];
   }
 
   async webSocketClose(socket: WebSocket) {
