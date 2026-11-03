@@ -234,7 +234,7 @@ export class GameRoom extends DurableObject<Env> {
   }
 
   async webSocketClose(socket: WebSocket) {
-    const attachment = socket.deserializeAttachment() as { playerId?: string } | null;
+    const attachment = socket.deserializeAttachment() as { playerId?: string; pendingRequestId?: string; spectator?: boolean } | null;
     const room = await this.load(); if (!room) return;
     const player = room.players.find(p => p.id === attachment?.playerId);
     const spectator = room.spectators.find(p => p.id === attachment?.playerId);
