@@ -99,6 +99,11 @@ export class GameRoom extends DurableObject<Env> {
     if (data.type === "roll") {
       if (room.status !== "playing" || player.seat !== room.currentTurn || room.dice !== null) return;
       room.dice = crypto.getRandomValues(new Uint32Array(1))[0] % 6 + 1;
+      const canMove = room.tokens[player.seat].some(progress => progress < 0 ? room.dice === 6 : progress + room.dice! <= 57);
+      if (!canMove) {
+        const rolled = room.dice; room.dice = null; room.currentTurn = (room.currentTurn + 1) % room.players.length;
+        await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "skip", seat: player.seat, value: rolled } }); return;
+      }
       await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "roll", seat: player.seat, value: room.dice } }); return;
     }
     if (data.type === "move") {
