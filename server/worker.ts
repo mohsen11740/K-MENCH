@@ -89,6 +89,12 @@ export class GameRoom extends DurableObject<Env> {
         server.serializeAttachment({ playerId: existingSpectator.id, spectator: true }); await this.save();
         server.send(JSON.stringify({ type: "welcome", playerId: existingSpectator.id, seat: null, spectator: true, room: this.publicRoom(room), music: room.music }));
         this.broadcast({ type: "presence", room: this.publicRoom(room) });
+      } else if (!room.hostId && room.players.length === 0) {
+        const host = { id: crypto.randomUUID(), name, seat: 0, connected: true, lastSeen: Date.now() };
+        room.players.push(host); room.hostId = host.id; room.stats["0"] ??= { wins: 0, losses: 0, captures: 0, completed: 0, moves: 0 };
+        room.music.consent["0"] = true; server.serializeAttachment({ playerId: host.id }); await this.save();
+        server.send(JSON.stringify({ type: "welcome", playerId: host.id, seat: 0, room: this.publicRoom(room), music: room.music }));
+        this.broadcast({ type: "presence", room: this.publicRoom(room) });
       } else {
         const role = url.searchParams.get("role") === "spectator" ? "spectator" : "player";
         const requestId = crypto.randomUUID(); room.pendingJoins.push({ requestId, name, role, createdAt: Date.now() });
