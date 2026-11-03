@@ -242,10 +242,10 @@ function App() {
     }
     setTokens(next); setDice(null)
     setMoveHistory(old=>[{name:players[turn]?.name||'بازیکن',detail:`مهره ${index+1} حرکت کرد${progress===57?' و به مقصد رسید':''}${captured?' و مهره حریف را زد':''}`,time:new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})},...old].slice(0,30))
-    setLocalStats(old=>{const n={...old};const st={wins:0,losses:0,captures:0,completed:0,moves:0,...n[String(turn)]};st.moves++;if(progress===57)st.completed++;if(captured)st.captures++;n[String(turn)]=st;return n})
+    setLocalStats(old=>{const n={...old};const st=Object.assign({wins:0,losses:0,captures:0,completed:0,moves:0},n[String(turn)]||{});st.moves++;if(progress===57)st.completed++;if(captured)st.captures++;n[String(turn)]=st;return n})
     const teamSeats = turn % 2 === 0 ? [0, 2] : [1, 3]
     const hasWon = teamMode ? teamSeats.every(seat => next[seat].every(t => t.progress === 57)) : next[turn].every(t => t.progress === 57)
-    if (hasWon) { setLocalStats(old=>{const n={...old};players.forEach((p,i)=>{const st={wins:0,losses:0,captures:0,completed:0,moves:0,...n[String(i)]};if(teamMode ? i%2===turn%2 : i===turn)st.wins++;else st.losses++;n[String(i)]=st});return n}); setWinner(turn); setMessage(teamMode ? `${turn % 2 === 0 ? teamName : 'تیم رقیب'} برنده بازی تیمی شد!` : `${players[turn].name} برنده بازی شد!`); return }
+    if (hasWon) { setLocalStats(old=>{const n={...old};players.forEach((p,i)=>{const st=Object.assign({wins:0,losses:0,captures:0,completed:0,moves:0},n[String(i)]||{});if(teamMode ? i%2===turn%2 : i===turn)st.wins++;else st.losses++;n[String(i)]=st});return n}); setWinner(turn); setMessage(teamMode ? `${turn % 2 === 0 ? teamName : 'تیم رقیب'} برنده بازی تیمی شد!` : `${players[turn].name} برنده بازی شد!`); return }
     if (value === 6 || captured) setMessage(captured ? 'مهره حریف زده شد! یک نوبت اضافه دارید.' : 'شش آوردید! یک نوبت اضافه دارید.')
     else setTurn(t => (t+1)%4)
   }
