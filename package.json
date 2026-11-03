@@ -16,11 +16,14 @@
     "typescript": "~5.8.3",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "lucide-react": "^0.468.0"
+    "lucide-react": "^0.468.0",
+    "@capacitor/core": "^7.0.0"
   },
   "devDependencies": {
     "wrangler": "^4.45.0",
     "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.8"
+    "@types/react-dom": "^19.1.8",
+    "@capacitor/android": "^7.0.0",
+    "@capacitor/cli": "^7.0.0"
   }
 }
