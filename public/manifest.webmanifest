@@ -1,14 +1,14 @@
 {
-  "name": "K-MENCH | بازی منچ باران",
-  "short_name": "K-MENCH",
-  "description": "بازی کلاسیک منچ با حال‌وهوای ایرانی",
+  "name": "BM | baran-mench",
+  "short_name": "BM",
+  "description": "BM | baran-mench، بازی منچ باران",
   "lang": "fa",
   "dir": "rtl",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#14251f",
-  "theme_color": "#14251f",
+  "background_color": "#071329",
+  "theme_color": "#071329",
   "icons": [
     { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
   ]
