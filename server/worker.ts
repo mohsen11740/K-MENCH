@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 type Player = { id: string; name: string; seat: number; connected: boolean; lastSeen: number };
-type Room = { code: string; status: "waiting" | "playing" | "finished"; hostId: string | null; players: Player[]; currentTurn: number; dice: number | null; tokens: number[][]; teamMode: boolean; teamName: string; league: string; leagueWins: Record<string, number>; music: { url: string; playing: boolean; startedAt: number | null }; createdAt: number; updatedAt: number };
+type Room = { code: string; status: "waiting" | "playing" | "finished"; hostId: string | null; players: Player[]; currentTurn: number; dice: number | null; tokens: number[][]; teamMode: boolean; teamName: string; winnerTeam?: string; league: string; leagueWins: Record<string, number>; music: { url: string; playing: boolean; startedAt: number | null }; createdAt: number; updatedAt: number };
 const headers = { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" };
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers });
 function makeCode() { const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from(crypto.getRandomValues(new Uint8Array(6)), n => chars[n % chars.length]).join(""); }
@@ -125,7 +125,7 @@ export class GameRoom extends DurableObject<Env> {
     if (data.type === "start") {
       const connected = room.players.filter(p => p.connected).length;
       if (player.id !== room.hostId || connected < 2 || room.status !== "waiting") return;
-      room.teamMode = !!data.teamMode; room.teamName = cleanName(data.teamName || "تیم باران"); room.league = typeof data.league === "string" ? data.league.slice(0, 40) : "دوستانه";
+      room.teamMode = !!data.teamMode; room.teamName = cleanName(data.teamName || "تیم باران"); room.winnerTeam = ""; room.league = typeof data.league === "string" ? data.league.slice(0, 40) : "دوستانه";
       if (room.teamMode && connected !== 4) return;
       room.status = "playing"; room.currentTurn = room.players.slice().sort((a,b)=>a.seat-b.seat)[0].seat; await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room) }); return;
     }
@@ -159,7 +159,7 @@ export class GameRoom extends DurableObject<Env> {
       room.dice = null;
       const teammates = room.teamMode ? (player.seat % 2 === 0 ? [0, 2] : [1, 3]) : [player.seat];
       const teamWon = teammates.every(seat => room.tokens[seat].every(p => p === 57));
-      if (teamWon) { room.status = "finished"; const key = `${room.league}:${room.teamMode ? "team" : "solo"}`; room.leagueWins[key] = (room.leagueWins[key] || 0) + 1; }
+      if (teamWon) { room.status = "finished"; room.winnerTeam = room.teamMode ? (player.seat % 2 === 0 ? room.teamName : "تیم رقیب") : player.name; const key = `${room.league}:${room.teamMode ? "team" : "solo"}`; room.leagueWins[key] = (room.leagueWins[key] || 0) + 1; }
       else if (value !== 6 && !captured) room.currentTurn = this.nextSeat(room, player.seat);
       await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room), lastAction: { type: "move", seat: player.seat, token, progress: next, captured, teamWon } });
     }
