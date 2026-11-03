@@ -77,7 +77,8 @@ export class GameRoom extends DurableObject<Env> {
       const playerId = url.searchParams.get("playerId");
       const existing = playerId ? room.players.find(p => p.id === playerId) : undefined;
       const existingSpectator = playerId ? room.spectators.find(p => p.id === playerId) : undefined;
-      if (!existing && !existingSpectator && room.status !== "waiting") return json({ ok: false, error: "بازی شروع شده و ورود بازیکن جدید بسته است." }, 409);
+      const requestedRole = url.searchParams.get("role") === "spectator" ? "spectator" : "player";
+      if (!existing && !existingSpectator && room.status !== "waiting" && requestedRole !== "spectator") return json({ ok: false, error: "بازی شروع شده و ورود بازیکن جدید بسته است؛ می‌توانید درخواست تماشاگر بدهید." }, 409);
       const pair = new WebSocketPair(); const client = pair[0]; const server = pair[1]; this.ctx.acceptWebSocket(server);
       if (existing) {
         existing.name = name; existing.connected = true; existing.lastSeen = Date.now(); room.music.consent[String(existing.seat)] = existing.id === room.hostId;
