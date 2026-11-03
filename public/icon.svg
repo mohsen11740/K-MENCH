@@ -1,6 +1,18 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-<rect width="512" height="512" rx="112" fill="#14251f"/>
-<circle cx="256" cy="256" r="190" fill="none" stroke="#d7b56d" stroke-width="12"/>
-<path d="M160 145v222m0-111 172-111M160 256l172 111" fill="none" stroke="#f8f0dc" stroke-width="30" stroke-linecap="round" stroke-linejoin="round"/>
-<circle cx="356" cy="145" r="24" fill="#c65b50"/><circle cx="356" cy="367" r="24" fill="#5d8ec7"/>
+<defs>
+ <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff0b5"/><stop offset=".48" stop-color="#d9a94d"/><stop offset="1" stop-color="#98631e"/></linearGradient>
+ <linearGradient id="navy" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#142b50"/><stop offset="1" stop-color="#071329"/></linearGradient>
+ <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="5"/></filter>
+</defs>
+<rect width="512" height="512" rx="92" fill="#030914"/>
+<rect x="12" y="12" width="488" height="488" rx="82" fill="url(#navy)" stroke="url(#gold)" stroke-width="8"/>
+<rect x="28" y="28" width="456" height="456" rx="68" fill="none" stroke="#e8c477" stroke-opacity=".38" stroke-width="2"/>
+<circle cx="256" cy="218" r="170" fill="none" stroke="#d7ad5b" stroke-opacity=".28" stroke-width="3"/>
+<path d="M179 105l24 34 53-48 53 48 24-34 8 69H171z" fill="url(#gold)" stroke="#fff0b5" stroke-width="3"/>
+<text x="256" y="286" text-anchor="middle" font-family="Georgia,serif" font-size="178" font-weight="bold" letter-spacing="-15" fill="url(#gold)" stroke="#80551d" stroke-width="2">BM</text>
+<path d="M95 316h322" stroke="url(#gold)" stroke-width="4" stroke-linecap="round"/>
+<g transform="translate(145 325) rotate(-12 40 40)"><rect width="76" height="76" rx="16" fill="#fff4d8" stroke="url(#gold)" stroke-width="5"/><g fill="#14213a"><circle cx="22" cy="22" r="7"/><circle cx="54" cy="22" r="7"/><circle cx="38" cy="38" r="7"/><circle cx="22" cy="54" r="7"/><circle cx="54" cy="54" r="7"/></g></g>
+<g transform="translate(290 325) rotate(12 40 40)"><rect width="76" height="76" rx="16" fill="#fff4d8" stroke="url(#gold)" stroke-width="5"/><g fill="#14213a"><circle cx="22" cy="22" r="7"/><circle cx="54" cy="22" r="7"/><circle cx="22" cy="54" r="7"/><circle cx="54" cy="54" r="7"/></g></g>
+<path d="M88 430h336" stroke="#d7ad5b" stroke-width="2" opacity=".8"/>
+<text x="256" y="466" text-anchor="middle" font-family="Arial,sans-serif" font-size="35" font-weight="700" letter-spacing="1.5" fill="#f6d88f">baran-mench</text>
 </svg>
