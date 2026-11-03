@@ -38,7 +38,7 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync android
       - name: Generate Android launcher icons
-        run: npx --yes @capacitor/assets generate --iconPath public/icon.svg --android
+        run: npx --yes @capacitor/assets generate --android --assetPath assets --iconBackgroundColor '#071329' --splashBackgroundColor '#071329'
       - name: Build debug APK
         working-directory: android
         run: ./gradlew assembleDebug
