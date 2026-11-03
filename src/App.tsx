@@ -244,7 +244,7 @@ function App() {
       <circle cx={x*40+20} cy={y*40+20} r="4" fill="#fff8e8"/>
     </g>
   }
-  return <main className="app-shell" data-theme={themeId} data-dice={diceStyle}>
+  return <main className="app-shell" data-theme={themeId} data-dice={diceStyle}>{gameStarted && <div className="start-flash"><strong>BM · BARAN MENCH</strong></div>}
     <header className="topbar"><div className="brand"><img className="brand-logo" src="/icon.svg" alt="BM baran-mench" /><div><strong>BM</strong><small>baran-mench</small></div></div><div className="top-actions"><span className="online-pill"><i/> {onlineSocket ? 'بازی آنلاین' : 'بازی محلی'}</span><button className="icon-button" onClick={newInvite} aria-label="دعوت دوستان"><Share2 size={18}/></button></div></header>
     <section className="hero"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> دورهمی با رنگ‌وبوی ایرانی</span><h1>یک تاس، چهار رنگ،<br/><em>یک عالمه هیجان!</em></h1><p>منچ کلاسیک با حال‌وهوای تازه، برای بازی کنار خانواده و دوستان.</p><div className="hero-tags"><span>۴ مهره برای هر نفر</span><span>۱ تا ۴ بازیکن</span><span>هوش مصنوعی</span></div></div><div className="hero-art"><div className="sunburst">✦</div><div className="art-dice"><span>⚄</span></div><div className="art-token red"/><div className="art-token gold"/><div className="art-token green"/><div className="art-token blue"/></div></section>
     <section className="game-layout">
