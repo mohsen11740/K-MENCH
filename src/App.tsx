@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type CSSProperties } from 'react'
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from 'react'
 import { Crown, Dice5, Gamepad2, Medal, MessageCircle, Plus, RotateCcw, Share2, Sparkles, Users } from 'lucide-react'
 
 type Player = { id: number; name: string; color: string; human: boolean; start: number }
@@ -48,6 +48,16 @@ function App() {
   const [onlineSeat, setOnlineSeat] = useState<number|null>(null)
   const [onlineSocket, setOnlineSocket] = useState<WebSocket|null>(null)
   const [onlineError, setOnlineError] = useState('')
+  const [chatMessages, setChatMessages] = useState<{name:string;text:string;time:string;kind?:string;audio?:string}[]>([])
+  const [chatDraft, setChatDraft] = useState('')
+  const [league, setLeague] = useState('دوستانه')
+  const [teamMode, setTeamMode] = useState(false)
+  const [teamName, setTeamName] = useState('تیم باران')
+  const [musicUrl, setMusicUrl] = useState('')
+  const [musicActive, setMusicActive] = useState(false)
+  const [showRules, setShowRules] = useState(false)
+  const [recording, setRecording] = useState(false)
+  const recorderRef = useRef<MediaRecorder | null>(null)
 
   const renamePlayer = (seat: number, value: string) => {
     const clean = value.replace(/[<>]/g, '').slice(0, 24)
@@ -62,6 +72,41 @@ function App() {
     if (seat === 0 || (onlineSocket && seat === onlineSeat)) localStorage.setItem('k-mench-player-name', current)
     const saved = players.map((player, index) => index === seat ? current : player.name)
     localStorage.setItem('k-mench-player-names', JSON.stringify(saved))
+  }
+  function sendChat() {
+    const text = chatDraft.trim().slice(0, 500)
+    if (!text) return
+    const message = { name: players[onlineSeat ?? turn]?.name || localPlayerName, text, time: new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}) }
+    if (onlineSocket?.readyState === WebSocket.OPEN) onlineSocket.send(JSON.stringify({type:'chat',message}))
+    else setChatMessages(old=>[...old.slice(-49),message])
+    setChatDraft('')
+  }
+  async function toggleVoice() {
+    if (recording) { recorderRef.current?.stop(); setRecording(false); return }
+    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setOnlineError('ضبط صدا در این مرورگر پشتیبانی نمی‌شود.'); return }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({audio:true})
+      const recorder = new MediaRecorder(stream); recorderRef.current = recorder
+      const chunks: BlobPart[] = []
+      recorder.ondataavailable = e => { if (e.data.size) chunks.push(e.data) }
+      recorder.onstop = () => {
+        stream.getTracks().forEach(t=>t.stop())
+        const blob = new Blob(chunks,{type:recorder.mimeType || 'audio/webm'})
+        if (blob.size > 900000) { setOnlineError('ویس طولانی است؛ لطفاً کوتاه‌تر ضبط کنید.'); return }
+        const reader = new FileReader()
+        reader.onload = () => {
+          const message = {name:players[onlineSeat ?? turn]?.name || localPlayerName,text:'پیام صوتی',time:new Date().toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'}),kind:'voice',audio:String(reader.result)}
+          if(onlineSocket?.readyState===WebSocket.OPEN) onlineSocket.send(JSON.stringify({type:'voice',message}))
+          else setChatMessages(old=>[...old.slice(-19),message])
+        }
+        reader.readAsDataURL(blob)
+      }
+      recorder.start(); setRecording(true)
+    } catch { setOnlineError('برای ارسال ویس باید اجازه دسترسی به میکروفن بدهید.') }
+  }
+  function setSharedMusic(playing:boolean) {
+    setMusicActive(playing)
+    if(onlineSocket?.readyState===WebSocket.OPEN) onlineSocket.send(JSON.stringify({type:'music',url:musicUrl,playing}))
   }
   const makePlayers = (count: number): Player[] => names.map((name, id) => ({
     id, name: id < count ? (playerNames[id]?.trim() || `بازیکن ${id+1}`) : `هوش مصنوعی ${id+1-count}`,
@@ -91,6 +136,9 @@ function App() {
         setOnlineError('اتصال آنلاین برقرار است.')
       }
       if (data.type === 'state' || data.type === 'presence') applyOnlineRoom(data.room)
+      if (data.type === 'chat') setChatMessages(old => [...old.slice(-49), data.message])
+      if (data.type === 'voice') setChatMessages(old => [...old.slice(-19), data.message])
+      if (data.type === 'music') { setMusicUrl(data.url || ''); setMusicActive(!!data.playing) }
     }
     ws.onerror = () => setOnlineError('اتصال به سرور برقرار نشد. سرور باید منتشر شده باشد.')
     ws.onclose = () => setOnlineError('ارتباط اتاق قطع شد. برای اتصال دوباره از کد دعوت استفاده کنید.')
@@ -201,7 +249,7 @@ function App() {
     <section className="hero"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> دورهمی با رنگ‌وبوی ایرانی</span><h1>یک تاس، چهار رنگ،<br/><em>یک عالمه هیجان!</em></h1><p>منچ کلاسیک با حال‌وهوای تازه، برای بازی کنار خانواده و دوستان.</p><div className="hero-tags"><span>۴ مهره برای هر نفر</span><span>۱ تا ۴ بازیکن</span><span>هوش مصنوعی</span></div></div><div className="hero-art"><div className="sunburst">✦</div><div className="art-dice"><span>⚄</span></div><div className="art-token red"/><div className="art-token gold"/><div className="art-token green"/><div className="art-token blue"/></div></section>
     <section className="game-layout">
       <div className="board-card"><div className="section-heading"><div><span className="eyebrow">صفحه بازی</span><h2>میدان منچ باران</h2></div><span className="turn-label" style={{'--turn-color':players[turn]?.color||COLORS[0]} as CSSProperties}>{gameStarted ? `نوبت: ${players[turn]?.name}` : onlineSocket ? 'اتاق آنلاین' : 'آماده شروع'}</span></div>
-        <div className="board-wrap"><svg className="board" viewBox="0 0 600 600" role="img" aria-label="صفحه بازی منچ چهار رنگ">
+        <div className="board-wrap">{gameStarted && <div className={`dice-center ${rolling?"rolling":""} ${diceStyle}`} aria-live="polite"><span>{dice===null?"⚄":["","⚀","⚁","⚂","⚃","⚄","⚅"][dice]}</span></div>}<svg className="board" viewBox="0 0 600 600" role="img" aria-label="صفحه بازی منچ چهار رنگ">
           <rect x="4" y="4" width="592" height="592" rx="24" fill="#f6eedb" stroke="#d4c49d" strokeWidth="4"/>
           {[[0,0],[9,0],[9,9],[0,9]].map(([x,y],i)=><g key={i}><rect x={x*40+20} y={y*40+20} width="220" height="220" rx="18" fill={COLORS[i]} opacity=".16" stroke={COLORS[i]} strokeWidth="3"/><rect x={x*40+60} y={y*40+60} width="140" height="140" rx="18" fill="#fffaf0" stroke={COLORS[i]} strokeWidth="3" opacity=".9"/>{Array.from({length:4},(_,j)=>{const [bx,by]=BASES[i][j];return <circle key={j} cx={bx*40+20} cy={by*40+20} r="16" fill={COLORS[i]} opacity=".2" stroke={COLORS[i]} strokeWidth="2"/>})}</g>)}
           {TRACK.map(([x,y],i)=><g key={i}><rect x={x*40+3} y={y*40+3} width="34" height="34" rx="7" fill={SAFE.has(i)?'#e7d8b5':'#fffaf0'} stroke="#d8cba9" strokeWidth="1.5"/>{SAFE.has(i)&&<text x={x*40+20} y={y*40+26} textAnchor="middle" fontSize="17" fill="#a68d56">✦</text>}</g>)}
@@ -212,12 +260,16 @@ function App() {
         <div className="board-legend">{names.map((n,i)=><span key={n}><i style={{background:COLORS[i]}}/>{n}</span>)}</div>
       </div>
       <aside className="side-panel">
-        {!gameStarted ? <div className="setup-card"><span className="eyebrow">تنظیم بازی</span><h2>{onlineSocket ? "اتاق آنلاین ساخته شد" : "چند نفر بازی می‌کنید؟"}</h2><p>{onlineSocket ? (onlineError || "دوستتان را با کد دعوت وارد اتاق کنید.") : "جایگاه‌های خالی با هوش مصنوعی تکمیل می‌شوند."}</p><div className="player-name-list"><strong>نام بازیکنان این دور</strong>{Array.from({length:onlineSocket ? (onlineRoom?.players?.length || 1) : humanCount},(_,i)=><label className="field-label" key={i}>نام بازیکن {i+1}<input className="player-name-input" value={i===0?localPlayerName:(playerNames[i] || `بازیکن ${i+1}`)} maxLength={18} onChange={e=>{if(i===0)setLocalPlayerName(e.target.value);else setPlayerNames(old=>old.map((n,j)=>j===i?e.target.value:n))}} placeholder={`نام بازیکن ${i+1}`} /></label>)}</div><div className="count-picker">{[1,2,3,4].map(n=><button key={n} className={humanCount===n?'selected':''} onClick={()=>setHumanCount(n)}>{n}<small>{n===1?'نفر': 'نفر'}</small></button>)}</div><div className="theme-picker"><strong>نقش ایرانی صفحه</strong><div className="theme-options">{IRANIAN_THEMES.map(t=><button type="button" key={t.id} className={themeId===t.id?'chosen':''} onClick={()=>setThemeId(t.id)}><span>{t.symbol}</span>{t.name}</button>)}</div></div><div className="theme-picker"><strong>مدل تاس</strong><div className="dice-options">{DICE_STYLES.map(d=><button type="button" key={d.id} className={diceStyle===d.id?'chosen':''} onClick={()=>setDiceStyle(d.id)}>{d.name}</button>)}</div></div><div className="seat-list">{(onlineSocket ? players : makePlayers(humanCount)).map(p=><div className="seat" key={p.id}><i style={{background:p.color}}/><span>{p.name}</span><small>{p.human?'انسان':'هوش مصنوعی'}</small></div>)}</div><button className="primary-button" disabled={!!onlineSocket && ((onlineRoom?.players?.filter((p:any) => p.connected).length || 0) < 2 || onlineSeat !== 0)} onClick={begin}><Gamepad2 size={18}/> {onlineSocket ? 'شروع بازی آنلاین' : 'شروع بازی'}</button></div> : <div className="control-card"><span className="eyebrow">کنترل بازی</span><h2>{winner!==null?'پایان بازی':players[turn]?.name}</h2>{players[turn]?.human && (!onlineSocket || onlineSeat===turn) && <label className="field-label in-game-name">تغییر نام بازیکن خودت<input className="player-name-input" value={players[turn]?.name || ''} maxLength={24} onChange={e=>renamePlayer(turn,e.target.value)} onBlur={()=>savePlayerName(turn)} placeholder="نام دلخواهت را بنویس" /></label>}<p>{onlineError || message}</p><div className={`dice-face ${rolling?'shake':''}`}><span>{dice===null?'⚄':['','⚀','⚁','⚂','⚃','⚄','⚅'][dice]}</span></div>{(onlineSocket ? onlineSeat===turn : players[turn]?.human) && gameStarted && winner===null && <button className="primary-button" disabled={rolling||dice!==null} onClick={()=>rollDice()}><Dice5 size={19}/>{rolling?'در حال انداختن تاس...':'انداختن تاس'}</button>}{dice!==null&&(onlineSocket ? onlineSeat===turn : players[turn]?.human)&&movable.length>0&&<small className="hint">یکی از مهره‌های روشن را روی صفحه انتخاب کنید.</small>}{winner!==null&&<button className="primary-button" onClick={onlineSocket ? newInvite : begin}><RotateCcw size={18}/> بازی دوباره</button>}<button className="subtle-button" onClick={newInvite}><Share2 size={16}/> دعوت از دوستان</button></div>}
+        {!gameStarted ? <div className="setup-card"><span className="eyebrow">تنظیم بازی</span><h2>{onlineSocket ? "اتاق آنلاین ساخته شد" : "چند نفر بازی می‌کنید؟"}</h2><p>{onlineSocket ? (onlineError || "دوستتان را با کد دعوت وارد اتاق کنید.") : "جایگاه‌های خالی با هوش مصنوعی تکمیل می‌شوند."}</p><div className="player-name-list"><strong>نام بازیکنان این دور</strong>{Array.from({length:onlineSocket ? (onlineRoom?.players?.length || 1) : humanCount},(_,i)=><label className="field-label" key={i}>نام بازیکن {i+1}<input className="player-name-input" value={i===0?localPlayerName:(playerNames[i] || `بازیکن ${i+1}`)} maxLength={18} onChange={e=>{if(i===0)setLocalPlayerName(e.target.value);else setPlayerNames(old=>old.map((n,j)=>j===i?e.target.value:n))}} placeholder={`نام بازیکن ${i+1}`} /></label>)}</div><div className="count-picker">{[1,2,3,4].map(n=><button key={n} className={humanCount===n?'selected':''} onClick={()=>setHumanCount(n)}>{n}<small>{n===1?'نفر': 'نفر'}</small></button>)}</div><div className="theme-picker"><strong>نقش ایرانی صفحه</strong><div className="theme-options">{IRANIAN_THEMES.map(t=><button type="button" key={t.id} className={themeId===t.id?'chosen':''} onClick={()=>setThemeId(t.id)}><span>{t.symbol}</span>{t.name}</button>)}</div></div><div className="theme-picker"><strong>نوع رقابت</strong><select className="player-name-input" value={league} onChange={e=>setLeague(e.target.value)}><option>دوستانه</option><option>لیگ خانوادگی</option><option>جام باران</option><option>حذفی</option></select><label className="field-label"><span><input type="checkbox" checked={teamMode} onChange={e=>setTeamMode(e.target.checked)}/> بازی تیمی دونفره</span></label>{teamMode && <input className="player-name-input" value={teamName} onChange={e=>setTeamName(e.target.value)} placeholder="نام تیم"/>}</div><div className="theme-picker"><strong>مدل تاس</strong><div className="dice-options">{DICE_STYLES.map(d=><button type="button" key={d.id} className={diceStyle===d.id?'chosen':''} onClick={()=>setDiceStyle(d.id)}>{d.name}</button>)}</div></div><div className="seat-list">{(onlineSocket ? players : makePlayers(humanCount)).map(p=><div className="seat" key={p.id}><i style={{background:p.color}}/><span>{p.name}</span><small>{p.human?'انسان':'هوش مصنوعی'}</small></div>)}</div><button className="primary-button" disabled={!!onlineSocket && ((onlineRoom?.players?.filter((p:any) => p.connected).length || 0) < 2 || onlineSeat !== 0)} onClick={begin}><Gamepad2 size={18}/> {onlineSocket ? 'شروع بازی آنلاین' : 'شروع بازی'}</button></div> : <div className="control-card"><span className="eyebrow">کنترل بازی</span><h2>{winner!==null?'پایان بازی':players[turn]?.name}</h2>{players[turn]?.human && (!onlineSocket || onlineSeat===turn) && <label className="field-label in-game-name">تغییر نام بازیکن خودت<input className="player-name-input" value={players[turn]?.name || ''} maxLength={24} onChange={e=>renamePlayer(turn,e.target.value)} onBlur={()=>savePlayerName(turn)} placeholder="نام دلخواهت را بنویس" /></label>}<p>{onlineError || message}</p><div className={`dice-face ${rolling?'shake':''}`}><span>{dice===null?'⚄':['','⚀','⚁','⚂','⚃','⚄','⚅'][dice]}</span></div>{(onlineSocket ? onlineSeat===turn : players[turn]?.human) && gameStarted && winner===null && <button className="primary-button" disabled={rolling||dice!==null} onClick={()=>rollDice()}><Dice5 size={19}/>{rolling?'در حال انداختن تاس...':'انداختن تاس'}</button>}{dice!==null&&(onlineSocket ? onlineSeat===turn : players[turn]?.human)&&movable.length>0&&<small className="hint">یکی از مهره‌های روشن را روی صفحه انتخاب کنید.</small>}{winner!==null&&<button className="primary-button" onClick={onlineSocket ? newInvite : begin}><RotateCcw size={18}/> بازی دوباره</button>}<button className="subtle-button" onClick={newInvite}><Share2 size={16}/> دعوت از دوستان</button></div>}
+        <section className="social-card"><div className="social-head"><strong>گفت‌وگوی بازیکنان</strong><button className="subtle-button" onClick={()=>setShowRules(true)}>قوانین بازی</button></div><div className="chat-feed">{chatMessages.map((m,i)=><div className="chat-message" key={i}><b>{m.name}</b><small>{m.time}</small>{m.kind==='voice'?<audio controls src={m.audio}/>:<p>{m.text}</p>}</div>)}</div><div className="chat-compose"><input className="player-name-input" value={chatDraft} onChange={e=>setChatDraft(e.target.value)} onKeyDown={e=>e.key==='Enter'&&sendChat()} placeholder="پیام بنویس..."/><button className="chat-send" onClick={sendChat}>ارسال</button><button className={recording?'chat-send recording':'chat-send'} onClick={toggleVoice}>{recording?'پایان ضبط':'🎙'}</button></div></section>
+        <section className="social-card"><strong>موسیقی میزبان</strong><input className="player-name-input" value={musicUrl} onChange={e=>setMusicUrl(e.target.value)} placeholder="لینک مستقیم فایل صوتی (https://...)"/><div className="music-controls"><button className="chat-send" onClick={()=>setSharedMusic(true)}>پخش برای همه</button><button className="chat-send" onClick={()=>setSharedMusic(false)}>توقف</button>{musicUrl && <audio controls src={musicUrl} onPlay={()=>setSharedMusic(true)} onPause={()=>setSharedMusic(false)}/>}</div></section>
         <div className="mini-stats"><div><Users size={18}/><strong>۴</strong><small>جایگاه بازی</small></div><div><Medal size={18}/><strong>۱۶</strong><small>مهره در میدان</small></div><div><Crown size={18}/><strong>۱</strong><small>قهرمان نهایی</small></div></div>
       </aside>
     </section>
     <section className="features"><div><span className="feature-icon">🎲</span><strong>قانون کلاسیک</strong><small>ورود با شش، حرکت مهره و زدن حریف</small></div><div><span className="feature-icon">🤖</span><strong>هم‌بازی هوشمند</strong><small>از تنهایی تا یک جمع چهارنفره</small></div><div><span className="feature-icon">📲</span><strong>قابل نصب</strong><small>روی موبایل و رایانه، بدون فروشگاه</small></div></section>
     <footer><strong>K-MENCH · بازی منچ باران</strong><span>طراحی و توسعه با احترام به بازی‌های دورهمی ایرانی</span><b>© تمامی حقوق این اثر متعلق به باران عبدی است.</b></footer>
+    {showRules&&<div className="modal-backdrop" onClick={()=>setShowRules(false)}><div className="invite-modal rules-modal" onClick={e=>e.stopPropagation()}><button className="close-modal" onClick={()=>setShowRules(false)}>×</button><h2>قوانین منچ کلاسیک</h2><ul><li>برای خارج کردن مهره از خانه باید ۶ بیاورید.</li><li>هر بازیکن چهار مهره دارد و با تاس حرکت می‌کند.</li><li>با رسیدن روی مهره حریف در خانه غیرایمن، آن مهره به خانه برمی‌گردد.</li><li>خانه‌های امن با ستاره مشخص شده‌اند.</li><li>برای ورود به خانه پایانی باید عدد دقیق بیاورید.</li><li>اولین بازیکنی که هر چهار مهره را به مقصد برساند برنده است.</li></ul><p>حالت‌های لیگ و تیمی فعلاً تنظیمات نمایشی هستند و امتیازدهی/جدول رتبه‌بندی مستقل هنوز به سرور اضافه نشده است.</p></div></div>}
+    {musicUrl && <audio className="shared-music-audio" src={musicUrl} autoPlay={musicActive} />}
     {showInvite&&<div className="modal-backdrop" onClick={()=>setShowInvite(false)}><div className="invite-modal" onClick={e=>e.stopPropagation()}><button className="close-modal" onClick={()=>setShowInvite(false)}>×</button><div className="invite-symbol"><MessageCircle/></div><span className="eyebrow">دعوت به بازی</span><h2>دوستت رو به منچ باران دعوت کن</h2><p>{onlineError || 'کد دعوت برای اشتراک‌گذاری آماده شد.'}</p>{inviteCode && <><div className="invite-code">{inviteCode}</div><button className="primary-button" onClick={shareInvite}><Share2 size={18}/> اشتراک‌گذاری کد و لینک</button></>}<small>از منوی اشتراک‌گذاری گوشی می‌توانید پیامک، واتساپ، تلگرام و دیگر پیام‌رسان‌ها را انتخاب کنید. ارسال پیامک با تأیید خودتان انجام می‌شود.</small></div></div>}
   </main>
 }
