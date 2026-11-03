@@ -1,7 +1,7 @@
 import { DurableObject } from "cloudflare:workers";
 
 type Player = { id: string; name: string; seat: number; connected: boolean; lastSeen: number };
-type Room = { code: string; status: "waiting" | "playing" | "finished"; hostId: string | null; players: Player[]; currentTurn: number; dice: number | null; tokens: number[][]; teamMode: boolean; teamName: string; winnerTeam?: string; league: string; leagueWins: Record<string, number>; music: { url: string; playing: boolean; startedAt: number | null }; createdAt: number; updatedAt: number };
+type Room = { code: string; status: "waiting" | "playing" | "finished"; hostId: string | null; players: Player[]; currentTurn: number; dice: number | null; tokens: number[][]; teamMode: boolean; teamName: string; winnerTeam?: string; league: string; leagueWins: Record<string, number>; music: { url: string; playing: boolean; startedAt: number | null; consent: Record<string, boolean> }; createdAt: number; updatedAt: number };
 const headers = { "content-type": "application/json; charset=utf-8", "access-control-allow-origin": "*" };
 const json = (data: unknown, status = 200) => new Response(JSON.stringify(data), { status, headers });
 function makeCode() { const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; return Array.from(crypto.getRandomValues(new Uint8Array(6)), n => chars[n % chars.length]).join(""); }
@@ -44,7 +44,7 @@ export class GameRoom extends DurableObject<Env> {
     if (!this.room) this.room = await this.ctx.storage.get<Room>("room") ?? null;
     if (this.room) {
       this.room.teamMode ??= false; this.room.teamName ??= "تیم باران"; this.room.league ??= "دوستانه"; this.room.leagueWins ??= {};
-      this.room.music ??= { url: "", playing: false, startedAt: null };
+      this.room.music ??= { url: "", playing: false, startedAt: null, consent: {} }; this.room.music.consent ??= {};
     }
     return this.room;
   }
@@ -58,7 +58,7 @@ export class GameRoom extends DurableObject<Env> {
     if (url.pathname === "/create" && request.method === "POST") {
       const data = await request.json() as { code: string; name: string };
       if (await this.load()) return json({ ok: false, error: "این کد قبلاً استفاده شده است." }, 409);
-      this.room = { code: data.code, status: "waiting", hostId: null, players: [], currentTurn: 0, dice: null, tokens: Array.from({ length: 4 }, () => Array(4).fill(-1)), teamMode: false, teamName: "تیم باران", league: "دوستانه", leagueWins: {}, music: { url: "", playing: false, startedAt: null }, createdAt: Date.now(), updatedAt: Date.now() };
+      this.room = { code: data.code, status: "waiting", hostId: null, players: [], currentTurn: 0, dice: null, tokens: Array.from({ length: 4 }, () => Array(4).fill(-1)), teamMode: false, teamName: "تیم باران", league: "دوستانه", leagueWins: {}, music: { url: "", playing: false, startedAt: null, consent: {} }, createdAt: Date.now(), updatedAt: Date.now() };
       await this.save();
       return json({ ok: true, code: data.code, maxPlayers: 4, status: "waiting" });
     }
@@ -83,6 +83,7 @@ export class GameRoom extends DurableObject<Env> {
         if (seat === 0) room.hostId = player.id;
       }
       player.name = name; player.connected = true; player.lastSeen = Date.now();
+      room.music.consent[String(player.seat)] = player.id === room.hostId;
       await this.save();
       const pair = new WebSocketPair(); const client = pair[0]; const server = pair[1];
       this.ctx.acceptWebSocket(server); server.serializeAttachment({ playerId: player.id });
@@ -111,8 +112,18 @@ export class GameRoom extends DurableObject<Env> {
     if (data.type === "music") {
       if (player.id !== room.hostId) return;
       const url = typeof data.url === "string" && /^https:\/\//i.test(data.url) ? data.url.slice(0, 1000) : "";
-      room.music = { url, playing: !!data.playing && !!url, startedAt: !!data.playing && !!url ? Date.now() : null };
+      if (!data.playing || !url) {
+        room.music = { ...room.music, url, playing: false, startedAt: null };
+      } else {
+        room.music = { url, playing: true, startedAt: Date.now(), consent: { [String(player.seat)]: true } };
+      }
       await this.save(); this.broadcast({ type: "music", ...room.music });
+      return;
+    }
+    if (data.type === "music-consent") {
+      if (!room.music.playing || player.id === room.hostId) return;
+      room.music.consent[String(player.seat)] = !!data.allowed;
+      await this.save(); this.broadcast({ type: "music-consent", seat: player.seat, allowed: !!data.allowed, consent: room.music.consent, players: room.players.map(({id,...p})=>p) });
       return;
     }
     if (data.type === "rename") {
