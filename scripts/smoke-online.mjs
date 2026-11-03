@@ -59,6 +59,17 @@ try {
   const renamed = await guest.waitFor((m) => m.type === 'presence' && m.room.players.some((p) => p.name === 'میزبان ویرایش‌شده'));
   if (!renamed.room.players.some((p) => p.name === 'میزبان ویرایش‌شده')) fail('Online player rename did not synchronize');
 
+  const hostChat = host.waitFor((m) => m.type === 'chat' && m.message.text === 'پیام آزمایشی');
+  const guestChat = guest.waitFor((m) => m.type === 'chat' && m.message.text === 'پیام آزمایشی');
+  host.send({ type: 'chat', message: { text: 'پیام آزمایشی' } });
+  await Promise.all([hostChat, guestChat]);
+
+  const voicePayload = 'data:audio/webm;base64,dGVzdA==';
+  const hostVoice = host.waitFor((m) => m.type === 'voice' && m.message.audio === voicePayload);
+  const guestVoice = guest.waitFor((m) => m.type === 'voice' && m.message.audio === voicePayload);
+  host.send({ type: 'voice', message: { text: 'پیام صوتی', audio: voicePayload } });
+  await Promise.all([hostVoice, guestVoice]);
+
   const hostMusic = host.waitFor((m) => m.type === 'music' && m.playing);
   const guestMusic = guest.waitFor((m) => m.type === 'music' && m.playing);
   host.send({ type: 'music', url: 'https://example.com/test-track.mp3', playing: true });
@@ -110,6 +121,8 @@ try {
     started: state.room.status === 'playing',
     synchronizedMove: true,
     synchronizedRename: true,
+    synchronizedChat: true,
+    synchronizedVoicePayload: true,
     synchronizedMusicClock: true,
     teamRequiresFourPlayers: true,
     movedSeat,
