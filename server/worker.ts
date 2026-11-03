@@ -93,7 +93,7 @@ export class GameRoom extends DurableObject<Env> {
     const attachment = socket.deserializeAttachment() as { playerId?: string } | null;
     const player = room.players.find(p => p.id === attachment?.playerId); if (!player) return;
     if (data.type === "start") {
-      if (player.id !== room.hostId || room.players.length < 2 || room.status !== "waiting") return;
+      if (player.id !== room.hostId || room.players.filter(p => p.connected).length < 2 || room.status !== "waiting") return;
       room.status = "playing"; room.currentTurn = 0; await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room) }); return;
     }
     if (data.type === "roll") {
