@@ -55,3 +55,13 @@
 .rules-modal li{font-size:12px;line-height:2;margin:6px 0;color:#5d6657}
 .shared-music-audio{display:none}
 @media(max-width:800px){.app-shell:has(.control-card) .dice-center{width:66px;height:66px;font-size:50px}.app-shell:has(.control-card) .social-card{padding:10px}.app-shell:has(.control-card) .game-layout{overflow:visible}}
+
+.app-shell[data-dice="gold"] .dice-center{background:linear-gradient(145deg,#fff2b6,#c28a2c);color:#80521d;box-shadow:inset -5px -6px 12px #81551b70,0 14px 25px #18251d70}
+.app-shell[data-dice="turquoise"] .dice-center{background:linear-gradient(145deg,#e0ffff,#4aa8a5);color:#075b60}
+.app-shell[data-dice="ruby"] .dice-center{background:linear-gradient(145deg,#ffe1dd,#a92e46);color:#751b34}
+.app-shell[data-dice="wood"] .dice-center{background:linear-gradient(145deg,#e9c69b,#91613d);color:#59351e}
+.app-shell[data-dice="marble"] .dice-center{background:linear-gradient(145deg,#fff,#b8c3c5);color:#52626a}
+.app-shell[data-dice="neon"] .dice-center{background:linear-gradient(145deg,#242b48,#11162d);color:#78f4ff;box-shadow:0 0 20px #35eaff, inset 0 0 14px #35eaff70}
+.app-shell[data-dice="royal"] .dice-center{background:linear-gradient(145deg,#f9e7bd,#ad8a4e);color:#563c21;border:2px solid #d6b66e}
+.app-shell[data-dice="persian"] .dice-center{background:repeating-linear-gradient(45deg,#e9d6ad,#e9d6ad 7px,#c89b5e 7px,#c89b5e 10px);color:#254a48}
+.app-shell[data-dice="midnight"] .dice-center{background:linear-gradient(145deg,#4b526d,#11182d);color:#f4d98e;border:1px solid #8e9ab9}
