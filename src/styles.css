@@ -65,3 +65,19 @@
 .app-shell[data-dice="royal"] .dice-center{background:linear-gradient(145deg,#f9e7bd,#ad8a4e);color:#563c21;border:2px solid #d6b66e}
 .app-shell[data-dice="persian"] .dice-center{background:repeating-linear-gradient(45deg,#e9d6ad,#e9d6ad 7px,#c89b5e 7px,#c89b5e 10px);color:#254a48}
 .app-shell[data-dice="midnight"] .dice-center{background:linear-gradient(145deg,#4b526d,#11182d);color:#f4d98e;border:1px solid #8e9ab9}
+
+/* Persian ornament accents for the selectable board editions */
+.app-shell[data-theme="turquoise"] .board-wrap{background-image:repeating-linear-gradient(45deg,#d7ece4 0 8px,#c1e2dd 8px 10px)}
+.app-shell[data-theme="miniature"] .board-wrap{background-image:radial-gradient(#b65b4630 1.5px,transparent 2px),linear-gradient(135deg,#f5dfc4,#edd0b5);background-size:12px 12px,auto}
+.app-shell[data-theme="isfahan"] .board-wrap{background-image:repeating-conic-gradient(#b68c4b20 0 25%,transparent 0 50%);background-size:18px 18px}
+.app-shell[data-theme="dome"] .board-wrap{background-image:radial-gradient(ellipse at top,#5dbab450,transparent 65%),linear-gradient(135deg,#d5efea,#b9ddd5)}
+.app-shell[data-theme="persepolis"] .board-wrap{background-image:repeating-linear-gradient(90deg,#9d75442a 0 3px,transparent 3px 12px),linear-gradient(#e9d4b0,#d7bd91)}
+.app-shell[data-theme="paisley"] .board-wrap{background-image:radial-gradient(ellipse at 50% 0%,#a34f7028 0 20%,transparent 21%),linear-gradient(135deg,#f4dfe6,#e8cbd7);background-size:22px 22px,auto}
+.app-shell[data-theme="garden"] .board-wrap{background-image:radial-gradient(circle at 4px 4px,#4d936b45 2px,transparent 3px),linear-gradient(135deg,#e1ecd4,#cbdcba);background-size:16px 16px,auto}
+.app-shell[data-theme="khatam"] .board-wrap{background-image:repeating-conic-gradient(#a56b3322 0 25%,transparent 0 50%);background-size:14px 14px}
+.app-shell[data-theme="pottery"] .board-wrap{background-image:radial-gradient(ellipse,#b65e3a24 35%,transparent 38%),linear-gradient(135deg,#f1ddc8,#dfbda2);background-size:24px 24px,auto}
+.app-shell[data-theme="shahnameh"] .board-wrap{background-image:repeating-linear-gradient(135deg,#9f3c3925 0 2px,transparent 2px 13px),linear-gradient(135deg,#e7d8c4,#d6c6b5)}
+.start-flash{position:fixed;inset:0;z-index:20;display:grid;place-items:center;background:radial-gradient(circle,#d7b56d 0,#14251f 68%);color:#fff4d8;pointer-events:none;animation:start-flash 1.25s ease-out forwards}
+.start-flash strong{font-size:clamp(34px,9vw,64px);letter-spacing:4px;text-shadow:0 8px 24px #0008;animation:logo-pop .9s cubic-bezier(.2,.9,.2,1) both}
+@keyframes start-flash{0%,65%{opacity:1}100%{opacity:0;visibility:hidden}}
+@keyframes logo-pop{0%{transform:scale(.45) rotate(-12deg);opacity:0}55%{transform:scale(1.08) rotate(2deg);opacity:1}100%{transform:scale(1)}}
