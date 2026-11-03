@@ -1,0 +1,11 @@
+name = "k-mench-server"
+main = "server/worker.ts"
+compatibility_date = "2026-11-03"
+
+[[durable_objects.bindings]]
+name = "GAME_ROOMS"
+class_name = "GameRoom"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["GameRoom"]
