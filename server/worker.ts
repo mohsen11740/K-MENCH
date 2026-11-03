@@ -40,7 +40,14 @@ export interface Env { GAME_ROOMS: DurableObjectNamespace<GameRoom> }
 
 export class GameRoom extends DurableObject<Env> {
   private room: Room | null = null;
-  private async load(): Promise<Room | null> { if (!this.room) this.room = await this.ctx.storage.get<Room>("room") ?? null; return this.room; }
+  private async load(): Promise<Room | null> {
+    if (!this.room) this.room = await this.ctx.storage.get<Room>("room") ?? null;
+    if (this.room) {
+      this.room.teamMode ??= false; this.room.teamName ??= "تیم باران"; this.room.league ??= "دوستانه"; this.room.leagueWins ??= {};
+      this.room.music ??= { url: "", playing: false, startedAt: null };
+    }
+    return this.room;
+  }
   private async save() { if (this.room) { this.room.updatedAt = Date.now(); await this.ctx.storage.put("room", this.room); } }
   private publicRoom(room: Room) { return { ...room, players: room.players.map(({ id, ...p }) => ({ ...p })) }; }
   private broadcast(payload: unknown) { const message = JSON.stringify(payload); for (const socket of this.ctx.getWebSockets()) { try { socket.send(message); } catch {} } }
