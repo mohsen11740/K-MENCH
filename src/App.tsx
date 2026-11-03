@@ -68,6 +68,7 @@ function App() {
   const [recording, setRecording] = useState(false)
   const recorderRef = useRef<MediaRecorder | null>(null)
   const musicAudioRef = useRef<HTMLAudioElement | null>(null)
+  const onlineSeatRef = useRef<number | null>(null)
   const [musicStartedAt, setMusicStartedAt] = useState<number | null>(null)
   const [musicConsent, setMusicConsent] = useState<Record<string, boolean>>({})
   const [musicAllowed, setMusicAllowed] = useState(false)
@@ -152,14 +153,14 @@ function App() {
       const data = JSON.parse(event.data)
       if (data.type === 'welcome') {
         localStorage.setItem('k-mench-player-' + code, data.playerId)
-        setOnlineSeat(data.seat); setInviteCode(code); applyOnlineRoom(data.room)
+        onlineSeatRef.current = data.seat; setOnlineSeat(data.seat); setInviteCode(code); applyOnlineRoom(data.room)
         if (data.music) { setMusicUrl(data.music.url || ''); setMusicActive(!!data.music.playing); setMusicStartedAt(data.music.startedAt || null); setMusicConsent(data.music.consent || {}); setMusicAllowed(data.seat === 0) }
         setOnlineError('اتصال آنلاین برقرار است.')
       }
       if (data.type === 'state' || data.type === 'presence') applyOnlineRoom(data.room)
       if (data.type === 'chat') setChatMessages(old => [...old.slice(-49), data.message])
       if (data.type === 'voice') setChatMessages(old => [...old.slice(-19), data.message])
-      if (data.type === 'music') { setMusicUrl(data.url || ''); setMusicActive(!!data.playing); setMusicStartedAt(data.startedAt || null); setMusicConsent(data.consent || {}); setMusicAllowed(data.playing && data.consent?.[String(onlineSeat ?? -1)] === true) }
+      if (data.type === 'music') { setMusicUrl(data.url || ''); setMusicActive(!!data.playing); setMusicStartedAt(data.startedAt || null); setMusicConsent(data.consent || {}); setMusicAllowed(data.playing && data.consent?.[String(onlineSeatRef.current ?? -1)] === true) }
       if (data.type === 'music-consent') setMusicConsent(data.consent || {})
     }
     ws.onerror = () => setOnlineError('اتصال به سرور برقرار نشد. سرور باید منتشر شده باشد.')
