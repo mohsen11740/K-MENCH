@@ -88,10 +88,17 @@ export class GameRoom extends DurableObject<Env> {
 
   async webSocketMessage(socket: WebSocket, message: string | ArrayBuffer) {
     const room = await this.load(); if (!room) return;
-    let data: { type?: string; token?: number } = {};
+    let data: { type?: string; token?: number; name?: string } = {};
     try { data = JSON.parse(typeof message === "string" ? message : new TextDecoder().decode(message)); } catch { return; }
     const attachment = socket.deserializeAttachment() as { playerId?: string } | null;
     const player = room.players.find(p => p.id === attachment?.playerId); if (!player) return;
+    if (data.type === "rename") {
+      if (typeof data.name !== "string") return;
+      player.name = cleanName(data.name);
+      await this.save();
+      this.broadcast({ type: "presence", room: this.publicRoom(room) });
+      return;
+    }
     if (data.type === "start") {
       if (player.id !== room.hostId || room.players.filter(p => p.connected).length < 2 || room.status !== "waiting") return;
       room.status = "playing"; room.currentTurn = 0; await this.save(); this.broadcast({ type: "state", room: this.publicRoom(room) }); return;
