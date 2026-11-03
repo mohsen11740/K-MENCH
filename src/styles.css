@@ -132,3 +132,28 @@
 .music-consent-prompt>span{line-height:1.8}
 .music-controls button:disabled{opacity:.45;cursor:not-allowed}
 @media(max-width:800px){.player-scoreboard{padding:10px}.player-score-header,.player-score-row{padding:8px 7px;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(34px,.6fr));gap:4px}.player-score-row{font-size:11px}.player-score-row b{font-size:13px}}
+
+
+/* Admission queue, spectator mode and live match analytics */
+.join-wait-card,.join-request-list{display:grid;gap:8px;padding:12px;border:1px solid #ddcfad;border-radius:13px;background:#f8f1df;color:#405343;font-size:11px}
+.join-wait-card span{line-height:1.9;color:#77705f}
+.join-request-list>strong{font-size:12px}
+.join-request{display:flex;align-items:center;flex-wrap:wrap;gap:7px;padding:8px 0;border-top:1px solid #e7dcc7}
+.join-request>span{flex:1 1 100%;font-weight:800}
+.join-request .chat-send{padding:7px 10px}
+.join-request .deny{background:#74675d}
+.sound-toggle{display:flex;align-items:center;gap:8px;color:#65705e;font-size:11px}
+.sound-toggle input{accent-color:#47785c}
+.live-team-stats .team-stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.team-stat-grid>div{display:grid;grid-template-columns:1fr auto;gap:5px;padding:11px;border-radius:12px;background:#f3efdf}
+.team-stat-grid b{grid-column:1/-1;color:#334c3c;font-size:12px}
+.team-stat-grid strong{font-size:19px;color:#9b7942;font-variant-numeric:tabular-nums}
+.team-stat-grid small{align-self:center;color:#817968;font-size:9px}
+.live-team-stats>small{display:block;margin-top:10px;color:#66705e;font-size:10px}
+.player-honors,.move-history{display:grid;gap:7px}
+.player-honors>div,.move-history>div{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding:8px 9px;border-bottom:1px solid #eee5d5;color:#5d6657;font-size:10px}
+.player-honors b,.move-history b{color:#334c3c;min-width:85px}
+.player-honors span{background:#f3efdf;border-radius:8px;padding:5px 7px}
+.move-history span{flex:1}
+.move-history small{color:#9a907a;font-size:9px}
+@media(max-width:520px){.join-request{gap:5px}.join-request .chat-send{font-size:9px;padding:7px}.team-stat-grid>div{padding:8px}}
