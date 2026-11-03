@@ -160,6 +160,8 @@ function App() {
     const savedId = localStorage.getItem(savedIdKey) || (role==='player' ? localStorage.getItem('k-mench-player-' + code) : null)
     const protocol = location.protocol === 'https:' ? 'wss:' : 'ws:'
     const ws = new WebSocket(`${protocol}//k-mench-server.mohsen11740.workers.dev/api/rooms/${code}/connect?name=${encodeURIComponent(name)}${savedId ? '&playerId='+encodeURIComponent(savedId) : ''}${!savedId && role==='spectator' ? '&role=spectator' : ''}`)
+    let socketOpened = false
+    ws.onopen = () => { socketOpened = true }
     activeSocketRef.current = ws
     setOnlineError('در حال اتصال به اتاق آنلاین...')
     ws.onmessage = event => {
@@ -181,7 +183,7 @@ function App() {
       if (data.type === 'music-consent') setMusicConsent(data.consent || {})
     }
     ws.onerror = () => setOnlineError('اتصال به سرور برقرار نشد. سرور باید منتشر شده باشد.')
-    ws.onclose = (event) => { if(activeSocketRef.current!==ws || event.code===1008)return; setOnlineError('ارتباط اتاق قطع شد. تلاش برای اتصال مجدد...'); if (reconnectEnabledRef.current) reconnectTimerRef.current = window.setTimeout(()=>connectOnline(code, role), 1800) }
+    ws.onclose = (event) => { if(activeSocketRef.current!==ws || event.code===1008)return; if(!socketOpened){setOnlineError(role==='player'?'اتصال بازیکن برقرار نشد؛ اگر بازی شروع شده، از لینک تماشاگر استفاده کنید.':'اتصال اتاق برقرار نشد.');return} setOnlineError('ارتباط اتاق قطع شد. تلاش برای اتصال مجدد...'); if (reconnectEnabledRef.current) reconnectTimerRef.current = window.setTimeout(()=>connectOnline(code, role), 1800) }
     setOnlineSocket(ws)
   }
   const decideJoin = (requestId:string, allow:boolean, role?:'player'|'spectator') => { if (onlineSocket?.readyState===WebSocket.OPEN) onlineSocket.send(JSON.stringify({type:'join-decision',requestId,allow,role})); setJoinRequests(old=>old.filter(x=>x.requestId!==requestId)) }
