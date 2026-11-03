@@ -133,7 +133,7 @@ function App() {
     })
     setPlayers(mapped); setTokens(room.tokens || freshTokens()); setTurn(room.currentTurn || 0)
     setDice(room.dice ?? null); setWinner(room.status === 'finished' ? room.currentTurn : null)
-    if (room.status === 'finished') setMessage(room.teamMode ? `${room.teamName || 'تیم برنده'} برنده بازی تیمی شد!` : `${mapped[room.currentTurn]?.name || 'بازیکن'} برنده بازی شد!`)
+    if (room.status === 'finished') setMessage(room.teamMode ? `${room.winnerTeam || (room.currentTurn % 2 === 0 ? room.teamName : 'تیم رقیب')} برنده بازی تیمی شد!` : `${mapped[room.currentTurn]?.name || 'بازیکن'} برنده بازی شد!`)
     setGameStarted(room.status === 'playing' || room.status === 'finished')
   }
   const connectOnline = (code: string) => {
@@ -221,7 +221,7 @@ function App() {
     setTokens(next); setDice(null)
     const teamSeats = turn % 2 === 0 ? [0, 2] : [1, 3]
     const hasWon = teamMode ? teamSeats.every(seat => next[seat].every(t => t.progress === 57)) : next[turn].every(t => t.progress === 57)
-    if (hasWon) { setWinner(turn); setMessage(teamMode ? `${teamName} برنده بازی تیمی شد!` : `${players[turn].name} برنده بازی شد!`); return }
+    if (hasWon) { setWinner(turn); setMessage(teamMode ? `${turn % 2 === 0 ? teamName : 'تیم رقیب'} برنده بازی تیمی شد!` : `${players[turn].name} برنده بازی شد!`); return }
     if (value === 6 || captured) setMessage(captured ? 'مهره حریف زده شد! یک نوبت اضافه دارید.' : 'شش آوردید! یک نوبت اضافه دارید.')
     else setTurn(t => (t+1)%4)
   }
