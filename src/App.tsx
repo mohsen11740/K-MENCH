@@ -133,6 +133,7 @@ function App() {
     })
     setPlayers(mapped); setTokens(room.tokens || freshTokens()); setTurn(room.currentTurn || 0)
     setDice(room.dice ?? null); setWinner(room.status === 'finished' ? room.currentTurn : null)
+    if (room.status === 'finished') setMessage(room.teamMode ? `${room.teamName || 'تیم برنده'} برنده بازی تیمی شد!` : `${mapped[room.currentTurn]?.name || 'بازیکن'} برنده بازی شد!`)
     setGameStarted(room.status === 'playing' || room.status === 'finished')
   }
   const connectOnline = (code: string) => {
@@ -296,7 +297,7 @@ function App() {
         <div className="mini-stats"><div><Users size={18}/><strong>۴</strong><small>جایگاه بازی</small></div><div><Medal size={18}/><strong>۱۶</strong><small>مهره در میدان</small></div><div><Crown size={18}/><strong>۱</strong><small>قهرمان نهایی</small></div></div>
       </aside>
     </section>
-    <section className="social-card league-scoreboard"><strong>جدول امتیاز لیگ‌ها</strong>{Object.entries(leagueScores).length ? Object.entries(leagueScores).map(([key,score])=><div className="league-score-row" key={key}><span>{key.replace(':',' · ')}</span><b>{score} برد</b></div>) : <p>با پایان هر بازی، بردها در این دستگاه ذخیره می‌شوند.</p>}</section>
+    <section className="social-card league-scoreboard"><strong>جدول امتیاز لیگ‌ها</strong>{Object.entries(onlineRoom?.leagueWins || leagueScores).length ? Object.entries(onlineRoom?.leagueWins || leagueScores).map(([key,score])=><div className="league-score-row" key={key}><span>{key.replace(':',' · ')}</span><b>{score} برد</b></div>) : <p>با پایان هر بازی، بردها در این دستگاه ذخیره می‌شوند.</p>}</section>
     <section className="features"><div><span className="feature-icon">🎲</span><strong>قانون کلاسیک</strong><small>ورود با شش، حرکت مهره و زدن حریف</small></div><div><span className="feature-icon">🤖</span><strong>هم‌بازی هوشمند</strong><small>از تنهایی تا یک جمع چهارنفره</small></div><div><span className="feature-icon">📲</span><strong>قابل نصب</strong><small>روی موبایل و رایانه، بدون فروشگاه</small></div></section>
     <footer><strong>K-MENCH · بازی منچ باران</strong><span>طراحی و توسعه با احترام به بازی‌های دورهمی ایرانی</span><b>© تمامی حقوق این اثر متعلق به باران عبدی است.</b></footer>
     {showRules&&<div className="modal-backdrop" onClick={()=>setShowRules(false)}><div className="invite-modal rules-modal" onClick={e=>e.stopPropagation()}><button className="close-modal" onClick={()=>setShowRules(false)}>×</button><h2>قوانین منچ کلاسیک</h2><ul><li>برای خارج کردن مهره از خانه باید ۶ بیاورید.</li><li>هر بازیکن چهار مهره دارد و با تاس حرکت می‌کند.</li><li>با رسیدن روی مهره حریف در خانه غیرایمن، آن مهره به خانه برمی‌گردد.</li><li>خانه‌های امن با ستاره مشخص شده‌اند.</li><li>برای ورود به خانه پایانی باید عدد دقیق بیاورید.</li><li>اولین بازیکنی که هر چهار مهره را به مقصد برساند برنده است.</li></ul><p>در بازی تیمی، جایگاه‌های ۱ و ۳ هم‌تیمی‌اند و جایگاه‌های ۲ و ۴ تیم مقابل را می‌سازند. جدول لیگ محلی روی همین دستگاه ذخیره می‌شود.</p></div></div>}
