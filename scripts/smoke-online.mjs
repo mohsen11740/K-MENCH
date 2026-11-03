@@ -75,6 +75,13 @@ try {
   host.send({ type: 'music', url: 'https://example.com/test-track.mp3', playing: true });
   const [musicA, musicB] = await Promise.all([hostMusic, guestMusic]);
   if (!musicA.startedAt || musicA.startedAt !== musicB.startedAt || musicA.url !== musicB.url) fail('Music state did not synchronize');
+  const hostConsent = host.waitFor((m) => m.type === 'music-consent' && m.seat === 1 && m.allowed === true);
+  guest.send({ type: 'music-consent', allowed: true });
+  const consentState = await hostConsent;
+  if (consentState.consent['1'] !== true) fail('Guest music consent was not recorded');
+  const hostStop = host.waitFor((m) => m.type === 'music' && !m.playing);
+  host.send({ type: 'music', url: 'https://example.com/test-track.mp3', playing: false });
+  await hostStop;
 
   host.send({ type: 'start', teamMode: true, teamName: 'تیم آزمایشی' });
   await new Promise((resolve) => setTimeout(resolve, 250));
@@ -124,6 +131,7 @@ try {
     synchronizedChat: true,
     synchronizedVoicePayload: true,
     synchronizedMusicClock: true,
+    perPlayerMusicConsent: true,
     teamRequiresFourPlayers: true,
     movedSeat,
     tokenProgress: state.room.tokens[movedSeat][0],
