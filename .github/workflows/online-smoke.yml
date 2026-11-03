@@ -4,6 +4,7 @@ on:
     branches: [main]
     paths:
       - "scripts/smoke-online.mjs"
+      - "server/**"
       - ".github/workflows/online-smoke.yml"
   workflow_dispatch:
 
