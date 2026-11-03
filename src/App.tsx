@@ -83,7 +83,7 @@ function App() {
   }
   async function toggleVoice() {
     if (recording) { recorderRef.current?.stop(); setRecording(false); return }
-    if (!navigator.mediaDevices?.getUserMedia || !window.MediaRecorder) { setOnlineError('ضبط صدا در این مرورگر پشتیبانی نمی‌شود.'); return }
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') { setOnlineError('ضبط صدا در این مرورگر پشتیبانی نمی‌شود.'); return }
     try {
       const stream = await navigator.mediaDevices.getUserMedia({audio:true})
       const recorder = new MediaRecorder(stream); recorderRef.current = recorder
