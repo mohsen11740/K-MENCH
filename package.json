@@ -29,5 +29,31 @@
     "electron": "^37.2.6",
     "electron-builder": "^26.0.12"
   },
-  "main": "electron/main.cjs"
+  "main": "electron/main.cjs",
+  "build": {
+    "appId": "ir.baran.kmench",
+    "productName": "BM baran-mench",
+    "directories": {
+      "output": "release"
+    },
+    "files": [
+      "dist/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "portable",
+          "arch": [
+            "x64"
+          ]
+        }
+      ],
+      "icon": "build/icon.ico"
+    },
+    "portable": {
+      "artifactName": "BM-baran-mench-Windows-${version}.${ext}"
+    }
+  }
 }
