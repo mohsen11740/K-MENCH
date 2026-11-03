@@ -113,3 +113,22 @@
 .league-score-row b{color:#9b7942}
 @media(max-width:800px){.app-shell:has(.control-card) .dice-center{width:78px;height:78px}.app-shell:has(.control-card) .dice-center .dice-cube{--cube-size:60px}.app-shell:has(.control-card) .dice-face .dice-cube{--cube-size:62px}}
 @media(prefers-reduced-motion:reduce){.dice-cube-stage.is-rolling .dice-cube{animation:none;transform:rotateX(-12deg) rotateY(18deg)}}
+
+
+/* Shared four-seat token scoreboard and per-player music permission */
+.player-scoreboard{margin:0 0 14px;gap:9px}
+.player-scoreboard>strong{font-size:13px;color:#304538}
+.player-score-grid{display:grid;gap:0;overflow:hidden;border:1px solid #e7dcc6;border-radius:12px;background:#fffdf7}
+.player-score-header,.player-score-row{display:grid;grid-template-columns:minmax(0,1.8fr) repeat(3,minmax(42px,.7fr));align-items:center;gap:7px;padding:9px 10px;text-align:center}
+.player-score-header{background:#f1eadb;color:#77715f;font-size:10px;font-weight:800}
+.player-score-row{border-top:1px solid #eee6d8;font-size:12px;color:#4b594b;font-variant-numeric:tabular-nums}
+.score-player-name{display:flex;align-items:center;gap:7px;text-align:right;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-weight:800}
+.score-player-name i{width:10px;height:10px;flex:0 0 10px;border-radius:50%;box-shadow:0 0 0 2px #fff,0 0 0 3px #d8cfbd}
+.player-score-row b{font-size:14px;color:#334c3c}
+.player-scoreboard>small{font-size:9px;line-height:1.8;color:#85806f}
+.music-consent-list,.music-consent-prompt{display:grid;gap:7px;padding:10px;border-radius:12px;background:#f4efdf;color:#53614f;font-size:10px}
+.music-consent-list b{font-size:11px;color:#304538}
+.music-consent-list span{display:flex;justify-content:space-between;border-top:1px solid #e3dac6;padding-top:6px}
+.music-consent-prompt>span{line-height:1.8}
+.music-controls button:disabled{opacity:.45;cursor:not-allowed}
+@media(max-width:800px){.player-scoreboard{padding:10px}.player-score-header,.player-score-row{padding:8px 7px;grid-template-columns:minmax(0,1.6fr) repeat(3,minmax(34px,.6fr));gap:4px}.player-score-row{font-size:11px}.player-score-row b{font-size:13px}}
