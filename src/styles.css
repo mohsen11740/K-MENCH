@@ -309,3 +309,76 @@
 @media(max-width:800px){
   .app-shell:has(.control-card) .board-wrap{border-width:10px!important;padding:7px!important}
 }
+
+
+/* BM DICE GEOMETRY FIX: actual six independently positioned 3D faces */
+.app-shell .dice-cube-stage{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  perspective:720px!important;
+  perspective-origin:50% 42%;
+  overflow:visible;
+}
+.app-shell .dice-cube{
+  --cube-size:78px;
+  position:relative!important;
+  width:var(--cube-size)!important;
+  height:var(--cube-size)!important;
+  display:block!important;
+  transform-style:preserve-3d!important;
+  backface-visibility:visible;
+  transform:rotateX(-18deg) rotateY(-28deg);
+  transition:transform .35s ease;
+  filter:drop-shadow(0 13px 9px #170d08a8);
+}
+.app-shell .cube-face{
+  position:absolute!important;
+  inset:0!important;
+  width:100%!important;
+  height:100%!important;
+  display:grid!important;
+  place-items:center!important;
+  overflow:hidden;
+  border:3px solid #fff0c2!important;
+  border-radius:13px!important;
+  background-color:#f4dfb2!important;
+  background-image:linear-gradient(145deg,#fff9e8,#d7b56d)!important;
+  color:#7e321f!important;
+  font-family:Arial,sans-serif!important;
+  font-size:49px!important;
+  line-height:1!important;
+  font-weight:900!important;
+  text-shadow:0 2px 0 #fff8e9,0 5px 7px #59351d55!important;
+  box-shadow:inset 4px 5px 9px #ffffffa8,inset -7px -8px 13px #70451e55,0 2px 5px #24150c55!important;
+  backface-visibility:hidden;
+}
+.app-shell .cube-front{transform:translateZ(calc(var(--cube-size)/2))!important}
+.app-shell .cube-back{transform:rotateY(180deg) translateZ(calc(var(--cube-size)/2))!important}
+.app-shell .cube-right{transform:rotateY(90deg) translateZ(calc(var(--cube-size)/2))!important}
+.app-shell .cube-left{transform:rotateY(-90deg) translateZ(calc(var(--cube-size)/2))!important}
+.app-shell .cube-top{transform:rotateX(90deg) translateZ(calc(var(--cube-size)/2))!important}
+.app-shell .cube-bottom{transform:rotateX(-90deg) translateZ(calc(var(--cube-size)/2))!important}
+.app-shell .dice-cube-stage.is-rolling .dice-cube{
+  animation:bm-real-cube-roll 1.05s cubic-bezier(.18,.72,.2,1) both!important;
+}
+@keyframes bm-real-cube-roll{
+  0%{transform:rotateX(-18deg) rotateY(-28deg) translate3d(0,0,0) scale(.82)}
+  22%{transform:rotateX(145deg) rotateY(190deg) rotateZ(65deg) translate3d(-5px,-18px,12px) scale(1.16)}
+  48%{transform:rotateX(390deg) rotateY(420deg) rotateZ(170deg) translate3d(7px,-10px,18px) scale(1.1)}
+  73%{transform:rotateX(610deg) rotateY(690deg) rotateZ(250deg) translate3d(-3px,-4px,8px) scale(1.04)}
+  100%{transform:rotateX(702deg) rotateY(692deg) rotateZ(360deg) translate3d(0,0,0) scale(1)}
+}
+.app-shell .dice-center .dice-cube{--cube-size:76px}
+.app-shell .dice-face .dice-cube{--cube-size:66px}
+.app-shell:has(.control-card) .dice-center{width:104px!important;height:104px!important;background:transparent!important}
+.app-shell:has(.control-card) .dice-center .dice-cube{--cube-size:88px}
+.app-shell:has(.control-card) .dice-face .dice-cube{--cube-size:66px}
+@media(max-width:800px){
+  .app-shell:has(.control-card) .dice-center{width:96px!important;height:96px!important}
+  .app-shell:has(.control-card) .dice-center .dice-cube{--cube-size:80px}
+}
+@media(prefers-reduced-motion:reduce){
+  .app-shell .dice-cube-stage.is-rolling .dice-cube{animation:none!important;transform:rotateX(-18deg) rotateY(-28deg)}
+}
