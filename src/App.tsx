@@ -29,11 +29,16 @@ const IRANIAN_THEMES = [{id:'turquoise',name:'کاشی فیروزه‌ای',symb
 const DICE_STYLES = [{id:'classic',name:'کلاسیک'},{id:'gold',name:'طلایی'},{id:'turquoise',name:'فیروزه‌ای'},{id:'ruby',name:'یاقوتی'},{id:'wood',name:'چوبی'},{id:'marble',name:'مرمری'},{id:'neon',name:'نئونی'},{id:'royal',name:'شاهانه'},{id:'persian',name:'ایرانی'},{id:'midnight',name:'شب'}]
 const freshTokens = (): Token[][] => Array.from({length:4}, () => Array.from({length:4}, () => ({progress:-1})))
 function DiceCube({ value, rolling }: { value: number | null; rolling: boolean }) {
-  const faces = ['⚀','⚁','⚂','⚃','⚄','⚅']
-  return <div className={`dice-cube-stage ${rolling ? 'is-rolling' : ''}`} aria-label={value ? `تاس روی عدد ${value}` : 'تاس'}>
-    <div className="dice-cube">
-      <div className="cube-face cube-front">⚂</div><div className="cube-face cube-back">⚄</div><div className="cube-face cube-right">⚅</div><div className="cube-face cube-left">⚁</div>
-      <div className="cube-face cube-top">{faces[(value || 1)-1]}</div><div className="cube-face cube-bottom">⚃</div>
+  const face = (number: number) => ['⚀','⚁','⚂','⚃','⚄','⚅'][number - 1]
+  const result = value ?? 3
+  return <div className={`dice-cube-stage ${rolling ? 'is-rolling' : ''}`} aria-label={value ? `تاس روی عدد ${value}` : 'تاس سه‌بعدی'}>
+    <div className="dice-cube" aria-hidden="true">
+      <div className="cube-face cube-front">{face(result)}</div>
+      <div className="cube-face cube-back">{face(7-result)}</div>
+      <div className="cube-face cube-right">{face(6)}</div>
+      <div className="cube-face cube-left">{face(1)}</div>
+      <div className="cube-face cube-top">{face(5)}</div>
+      <div className="cube-face cube-bottom">{face(2)}</div>
     </div>
   </div>
 }
