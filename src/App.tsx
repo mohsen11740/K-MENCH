@@ -63,6 +63,46 @@ function App() {
   const [soundEnabled, setSoundEnabled] = useState(()=>localStorage.getItem('k-mench-sound') !== 'off')
   const [soundVolume, setSoundVolume] = useState(()=>Number(localStorage.getItem('k-mench-volume') || '0.7'))
   const [localStats, setLocalStats] = useState<Record<string,{wins:number;losses:number;captures:number;completed:number;moves:number}>>(()=>{try{return JSON.parse(localStorage.getItem('k-mench-player-stats')||'{}')}catch{return {}}})
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const playDiceSound = () => {
+    if (!soundEnabled) return
+    try {
+      const AudioCtx = window.AudioContext || (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext
+      if (!AudioCtx) return
+      const ctx = audioContextRef.current || (audioContextRef.current = new AudioCtx())
+      if (ctx.state === 'suspended') void ctx.resume()
+      const now = ctx.currentTime
+      const master = ctx.createGain()
+      master.gain.setValueAtTime(Math.max(0.02, soundVolume * 0.22), now)
+      master.gain.exponentialRampToValueAtTime(0.001, now + 0.82)
+      master.connect(ctx.destination)
+      const roll = ctx.createOscillator()
+      const rollGain = ctx.createGain()
+      roll.type = 'triangle'
+      roll.frequency.setValueAtTime(260, now)
+      roll.frequency.exponentialRampToValueAtTime(75, now + 0.72)
+      rollGain.gain.setValueAtTime(0.001, now)
+      rollGain.gain.linearRampToValueAtTime(0.55, now + 0.08)
+      rollGain.gain.exponentialRampToValueAtTime(0.001, now + 0.76)
+      roll.connect(rollGain); rollGain.connect(master); roll.start(now); roll.stop(now + 0.78)
+      for (let i = 0; i < 7; i++) {
+        const at = now + 0.08 + i * 0.085
+        const tick = ctx.createOscillator()
+        const gain = ctx.createGain()
+        tick.type = 'square'
+        tick.frequency.setValueAtTime(420 + (i % 3) * 95, at)
+        gain.gain.setValueAtTime(0.001, at)
+        gain.gain.linearRampToValueAtTime(0.22, at + 0.008)
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.045)
+        tick.connect(gain); gain.connect(master); tick.start(at); tick.stop(at + 0.05)
+      }
+      const settle = ctx.createOscillator()
+      const settleGain = ctx.createGain()
+      settle.type = 'sine'; settle.frequency.setValueAtTime(520, now + 0.68); settle.frequency.exponentialRampToValueAtTime(180, now + 0.82)
+      settleGain.gain.setValueAtTime(0.001, now + 0.68); settleGain.gain.linearRampToValueAtTime(0.28, now + 0.7); settleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.84)
+      settle.connect(settleGain); settleGain.connect(master); settle.start(now + 0.68); settle.stop(now + 0.85)
+    } catch { /* Audio is optional; gameplay continues when sound is unavailable. */ }
+  }
   const reconnectTimerRef = useRef<number | null>(null)
   const activeSocketRef = useRef<WebSocket | null>(null)
   const reconnectEnabledRef = useRef(true)
@@ -220,6 +260,7 @@ function App() {
     if (onlineSocket && onlineRoom?.status === 'playing') { if (onlineSeat === turn) onlineSocket.send(JSON.stringify({type:'roll'})); return }
     if (rolling || winner !== null || dice !== null) return
     setRolling(true)
+    playDiceSound()
     const value = Math.floor(Math.random()*6)+1
     window.setTimeout(() => {
       setDice(value); setRolling(false)
@@ -228,7 +269,7 @@ function App() {
         setMessage(`عدد ${value} آمد. حرکت ممکن نیست.`)
         window.setTimeout(() => { setDice(null); setTurn(t => (t+1)%4) }, 850)
       } else setMessage(ai ? `هوش مصنوعی ${turn+1} عدد ${value} آورد.` : `عدد ${value} آمد. مهره موردنظر را انتخاب کنید.`)
-    }, 420)
+    }, 1050)
   }
   function moveToken(index: number) {
     if (onlineSocket && onlineRoom?.status === 'playing') { if (onlineSeat === turn && dice !== null) onlineSocket.send(JSON.stringify({type:'move', token:index})); return }
