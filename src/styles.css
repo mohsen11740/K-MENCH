@@ -231,3 +231,20 @@
  .app-shell:has(.setup-card) .theme-options{max-height:100px}
 }
 @media(prefers-reduced-motion:reduce){.app-shell:has(.control-card) .dice-cube-stage.is-rolling .dice-cube{animation:none}}
+
+
+/* Original BM artwork assets: Persian wood, gold inlay and paper texture */
+.app-shell .hero{background-image:linear-gradient(115deg,#10251fdd,#14251fee),url('/art/wood-grain.svg');background-size:cover,260px 120px;background-blend-mode:normal,soft-light}
+.app-shell .hero-art{background:radial-gradient(ellipse at center,#d7b56d18 0,transparent 68%);border-radius:50%}
+.app-shell .art-dice{background:url('/art/dice-gold.svg') center/contain no-repeat;box-shadow:none;color:transparent;filter:drop-shadow(13px 17px 0 #0b1712) drop-shadow(0 16px 22px #0007)}
+.app-shell .art-dice span{opacity:0}
+.app-shell .board-wrap{background-image:url('/art/persian-wood-frame.svg'),url('/art/board-paper.svg');background-size:100% 100%,cover;background-position:center;background-repeat:no-repeat;background-origin:border-box,padding-box;background-clip:border-box,padding-box;border:10px solid transparent;border-radius:20px;padding:13px;box-shadow:0 15px 28px #24170f35,inset 0 0 0 1px #f8df9a}
+.app-shell .board{filter:drop-shadow(0 2px 2px #4c351d22)}
+.app-shell .cube-face{background-image:linear-gradient(145deg,#ffffff35,#00000012),url('/art/board-paper.svg');background-size:cover,46px 46px;background-blend-mode:soft-light,overlay;border:2px solid #fff0c2!important;box-shadow:inset 0 2px 5px #ffffff88,inset 0 -5px 8px #29170e30,0 5px 10px #24150d55!important}
+.app-shell[data-dice="wood"] .cube-face{background-image:linear-gradient(145deg,#ffffff20,#00000025),url('/art/wood-grain.svg')}
+.app-shell[data-dice="gold"] .cube-face,.app-shell[data-dice="royal"] .cube-face,.app-shell[data-dice="persian"] .cube-face{background-image:linear-gradient(145deg,#ffffff30,#00000010),url('/art/dice-gold.svg')}
+.app-shell .dice-cube{filter:drop-shadow(0 10px 8px #1d120d88)}
+.app-shell .board-card{background-image:linear-gradient(135deg,#fffaf0f2,#f3e8d0eF),url('/art/board-paper.svg');background-size:auto,180px 180px}
+.app-shell:has(.control-card) .board-wrap{border-width:10px;padding:9px;background-size:100% 100%,cover}
+.app-shell:has(.control-card) .side-panel{background-image:linear-gradient(180deg,#4b291ceF,#21130fF2),url('/art/wood-grain.svg');background-size:cover,260px 120px;background-blend-mode:normal,soft-light}
+@media(max-width:800px){.app-shell:has(.control-card) .board-wrap{border-width:8px;padding:7px}}
