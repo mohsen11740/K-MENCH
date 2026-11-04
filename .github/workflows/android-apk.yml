@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'public/**'
+      - 'assets/**'
       - 'index.html'
       - 'capacitor.config.ts'
       - 'package.json'
@@ -49,7 +50,9 @@ jobs:
         run: npx --yes @capacitor/assets generate --android --assetPath assets --iconBackgroundColor '#071329' --splashBackgroundColor '#071329'
       - name: Build debug APK
         working-directory: android
-        run: ./gradlew assembleDebug
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
