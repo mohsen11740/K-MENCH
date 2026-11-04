@@ -29,16 +29,14 @@ const IRANIAN_THEMES = [{id:'turquoise',name:'کاشی فیروزه‌ای',symb
 const DICE_STYLES = [{id:'classic',name:'کلاسیک'},{id:'gold',name:'طلایی'},{id:'turquoise',name:'فیروزه‌ای'},{id:'ruby',name:'یاقوتی'},{id:'wood',name:'چوبی'},{id:'marble',name:'مرمری'},{id:'neon',name:'نئونی'},{id:'royal',name:'شاهانه'},{id:'persian',name:'ایرانی'},{id:'midnight',name:'شب'}]
 const freshTokens = (): Token[][] => Array.from({length:4}, () => Array.from({length:4}, () => ({progress:-1})))
 function DiceCube({ value, rolling }: { value: number | null; rolling: boolean }) {
-  const face = (number: number) => ['⚀','⚁','⚂','⚃','⚄','⚅'][number - 1]
+  const patterns: Record<number, number[]> = { 1:[4], 2:[0,8], 3:[0,4,8], 4:[0,2,6,8], 5:[0,2,4,6,8], 6:[0,2,3,5,6,8] }
+  const face = (number: number, side: string) => <div className={`cube-face cube-${side}`} aria-label={`عدد ${number}`}>
+    {Array.from({length:9},(_,i)=><span key={i} className={patterns[number].includes(i) ? 'pip active' : 'pip'} />)}
+  </div>
   const result = value ?? 3
   return <div className={`dice-cube-stage ${rolling ? 'is-rolling' : ''}`} aria-label={value ? `تاس روی عدد ${value}` : 'تاس سه‌بعدی'}>
     <div className="dice-cube" aria-hidden="true">
-      <div className="cube-face cube-front">{face(result)}</div>
-      <div className="cube-face cube-back">{face(7-result)}</div>
-      <div className="cube-face cube-right">{face(6)}</div>
-      <div className="cube-face cube-left">{face(1)}</div>
-      <div className="cube-face cube-top">{face(5)}</div>
-      <div className="cube-face cube-bottom">{face(2)}</div>
+      {face(result,'front')}{face(7-result,'back')}{face(6,'right')}{face(1,'left')}{face(5,'top')}{face(2,'bottom')}
     </div>
   </div>
 }
@@ -80,34 +78,41 @@ function App() {
       if (ctx.state === 'suspended') void ctx.resume()
       const now = ctx.currentTime
       const master = ctx.createGain()
-      master.gain.setValueAtTime(Math.max(0.02, soundVolume * 0.22), now)
-      master.gain.exponentialRampToValueAtTime(0.001, now + 0.82)
+      master.gain.setValueAtTime(Math.max(0.025, soundVolume * 0.34), now)
       master.connect(ctx.destination)
-      const roll = ctx.createOscillator()
-      const rollGain = ctx.createGain()
-      roll.type = 'triangle'
-      roll.frequency.setValueAtTime(260, now)
-      roll.frequency.exponentialRampToValueAtTime(75, now + 0.72)
-      rollGain.gain.setValueAtTime(0.001, now)
-      rollGain.gain.linearRampToValueAtTime(0.55, now + 0.08)
-      rollGain.gain.exponentialRampToValueAtTime(0.001, now + 0.76)
-      roll.connect(rollGain); rollGain.connect(master); roll.start(now); roll.stop(now + 0.78)
-      for (let i = 0; i < 7; i++) {
-        const at = now + 0.08 + i * 0.085
-        const tick = ctx.createOscillator()
+      const length = Math.floor(ctx.sampleRate * 0.9)
+      const buffer = ctx.createBuffer(1, length, ctx.sampleRate)
+      const samples = buffer.getChannelData(0)
+      for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / length)
+      const rumble = ctx.createBufferSource()
+      rumble.buffer = buffer
+      const body = ctx.createBiquadFilter()
+      body.type = 'lowpass'
+      body.frequency.setValueAtTime(1450, now)
+      body.frequency.exponentialRampToValueAtTime(260, now + 0.78)
+      const bodyGain = ctx.createGain()
+      bodyGain.gain.setValueAtTime(0.001, now)
+      bodyGain.gain.linearRampToValueAtTime(0.72, now + 0.035)
+      bodyGain.gain.exponentialRampToValueAtTime(0.001, now + 0.84)
+      rumble.connect(body); body.connect(bodyGain); bodyGain.connect(master)
+      rumble.start(now); rumble.stop(now + 0.86)
+      for (let i = 0; i < 8; i++) {
+        const at = now + 0.055 + i * 0.092 + Math.random() * 0.025
+        const hit = ctx.createBufferSource()
+        hit.buffer = buffer
+        const filter = ctx.createBiquadFilter()
+        filter.type = 'bandpass'
+        filter.frequency.setValueAtTime(900 + Math.random() * 900, at)
+        filter.Q.value = 0.8
         const gain = ctx.createGain()
-        tick.type = 'square'
-        tick.frequency.setValueAtTime(420 + (i % 3) * 95, at)
         gain.gain.setValueAtTime(0.001, at)
-        gain.gain.linearRampToValueAtTime(0.22, at + 0.008)
-        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.045)
-        tick.connect(gain); gain.connect(master); tick.start(at); tick.stop(at + 0.05)
+        gain.gain.linearRampToValueAtTime(0.34, at + 0.006)
+        gain.gain.exponentialRampToValueAtTime(0.001, at + 0.052)
+        hit.connect(filter); filter.connect(gain); gain.connect(master)
+        hit.start(at, Math.random() * 0.18, 0.06)
       }
-      const settle = ctx.createOscillator()
-      const settleGain = ctx.createGain()
-      settle.type = 'sine'; settle.frequency.setValueAtTime(520, now + 0.68); settle.frequency.exponentialRampToValueAtTime(180, now + 0.82)
-      settleGain.gain.setValueAtTime(0.001, now + 0.68); settleGain.gain.linearRampToValueAtTime(0.28, now + 0.7); settleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.84)
-      settle.connect(settleGain); settleGain.connect(master); settle.start(now + 0.68); settle.stop(now + 0.85)
+      master.gain.setValueAtTime(Math.max(0.025, soundVolume * 0.34), now)
+      master.gain.exponentialRampToValueAtTime(0.001, now + 0.9)
     } catch { /* Audio is optional; gameplay continues when sound is unavailable. */ }
   }
   const reconnectTimerRef = useRef<number | null>(null)
@@ -236,17 +241,29 @@ function App() {
   }
   const decideJoin = (requestId:string, allow:boolean, role?:'player'|'spectator') => { if (onlineSocket?.readyState===WebSocket.OPEN) onlineSocket.send(JSON.stringify({type:'join-decision',requestId,allow,role})); setJoinRequests(old=>old.filter(x=>x.requestId!==requestId)) }
   const begin = () => {
-    if (onlineSocket) {
-      const connected = onlineRoom?.players?.filter((p:any) => p.connected).length || 0
+    const socket = onlineSocket
+    if (socket?.readyState === WebSocket.OPEN && onlineRoom) {
+      const connected = onlineRoom.players?.filter((p:any) => p.connected).length || 0
       if (connected < 2) { setMessage('برای شروع بازی آنلاین، دست‌کم دو بازیکن باید وارد اتاق شوند.'); return }
       if (teamMode && connected !== 4) { setMessage('برای بازی تیمی آنلاین، هر چهار بازیکن باید وارد اتاق شوند.'); return }
-      onlineSocket.send(JSON.stringify({type:'start', league, teamMode, teamName})); return
+      socket.send(JSON.stringify({type:'start', league, teamMode, teamName})); return
+    }
+    if (socket && socket.readyState !== WebSocket.CLOSED) {
+      setMessage('اتصال آنلاین هنوز در حال آماده‌سازی است؛ کمی صبر کنید یا اتاق را ببندید.')
+      return
+    }
+    if (socket?.readyState === WebSocket.CLOSED) {
+      setOnlineSocket(null); setOnlineRoom(null); setOnlineSeat(null); activeSocketRef.current = null
     }
     const chosenNames = playerNames.map((n,i)=>i===0 ? (localPlayerName.trim() || 'باران') : (n.trim() || `بازیکن ${i+1}`))
     setPlayerNames(chosenNames)
     localStorage.setItem('k-mench-player-name', chosenNames[0])
     localStorage.setItem('k-mench-player-names', JSON.stringify(chosenNames))
-    setPlayers(makePlayers(humanCount)); setTokens(freshTokens()); setTurn(0); setDice(null)
+    const localPlayers: Player[] = names.map((colorName,id) => ({
+      id, name: id < humanCount ? chosenNames[id] : `هوش مصنوعی ${id+1-humanCount}`,
+      color: COLORS[id], human: id < humanCount, start: STARTS[id],
+    }))
+    setPlayers(localPlayers); setTokens(freshTokens()); setTurn(0); setDice(null); setRolling(false)
     setWinner(null); setGameStarted(true); setScreen('game'); setMessage('نوبت بازیکن قرمز است. تاس بیندازید.')
   }
   useEffect(() => {
