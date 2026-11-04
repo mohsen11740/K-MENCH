@@ -45,7 +45,7 @@ if (!response.ok || !created.ok || !/^[A-HJ-NP-Z2-9]{6}$/.test(created.code)) fa
 const url = (name) => `${BASE.replace('https:', 'wss:')}/api/rooms/${created.code}/connect?name=${encodeURIComponent(name)}`;
 const host = new Peer(url('بازیکن اول'));
 await host.opened;
-const guest = new Peer(url('بازیکن دوم'));
+let guest = new Peer(url('بازیکن دوم'));
 try {
   await Promise.all([host.opened, guest.opened]);
   const hostWelcome = await host.waitFor((m) => m.type === 'welcome');
@@ -58,6 +58,15 @@ try {
   await approvedGuest;
   if (hostWelcome.seat !== 0 || guestWelcome.seat !== 1) fail('Player seats are not assigned correctly');
   if (hostWelcome.room.players.length !== 1 || guestWelcome.room.players.length !== 2) fail('Room membership did not synchronize');
+
+  const disconnectedPresence = host.waitFor((m) => m.type === 'presence' && m.room.players.some((p) => p.seat === 1 && !p.connected));
+  guest.close();
+  await disconnectedPresence;
+  const reconnectedGuest = new Peer(`${BASE.replace('https:', 'wss:')}/api/rooms/${created.code}/connect?name=${encodeURIComponent('بازیکن دوم')}&playerId=${encodeURIComponent(guestWelcome.playerId)}`);
+  await reconnectedGuest.opened;
+  const reconnectedWelcome = await reconnectedGuest.waitFor((m) => m.type === 'welcome');
+  if (reconnectedWelcome.seat !== 1 || !reconnectedWelcome.room.players.some((p) => p.seat === 1 && p.connected)) fail('Player reconnect did not restore the original seat');
+  guest = reconnectedGuest;
 
   host.send({ type: 'rename', name: 'میزبان ویرایش‌شده' });
   const renamed = await guest.waitFor((m) => m.type === 'presence' && m.room.players.some((p) => p.name === 'میزبان ویرایش‌شده'));
@@ -133,6 +142,7 @@ try {
     started: state.room.status === 'playing',
     synchronizedMove: true,
     synchronizedRename: true,
+    automaticReconnect: true,
     synchronizedChat: true,
     synchronizedVoicePayload: true,
     synchronizedMusicClock: true,
