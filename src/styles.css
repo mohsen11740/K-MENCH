@@ -402,3 +402,26 @@
 @media(max-width:600px){.bm-back-menu{padding:7px 9px;font-size:9px}}
 
 .app-shell.screen-setup{overflow-x:hidden!important;overflow-y:auto!important}.app-shell.screen-setup .side-panel>.social-card,.app-shell.screen-setup .side-panel>.mini-stats{display:none!important}.app-shell.screen-setup .side-panel{display:block!important}.app-shell.screen-setup .player-name-input{background:#f7e8c8!important;border:1px solid #c99b57!important;color:#392316!important}.app-shell.screen-setup .field-label{color:#f4dfb3!important}.app-shell.screen-setup .theme-picker>strong,.app-shell.screen-setup .player-name-list>strong{color:#f3d89f!important}
+
+
+/* Correct 3D cube faces: six real pip layouts, not unicode dice glyphs */
+.dice-cube{transform:rotateX(-12deg) rotateY(18deg)}
+.cube-face{
+  position:absolute;inset:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);
+  place-items:center;padding:11px;border:2px solid #fff9e9;border-radius:12px;
+  background:linear-gradient(145deg,#fffef8,#d8c49a);color:#a6473d;
+  box-shadow:inset -5px -6px 10px #8e704b55,inset 4px 4px 9px #fff,0 1px 2px #60452a55;
+  backface-visibility:visible;
+}
+.cube-face .pip{width:7px;height:7px;border-radius:50%;background:transparent;box-shadow:none}
+.cube-face .pip.active{background:currentColor;box-shadow:inset 1px 1px 1px #ffffff99,0 1px 2px #38241766}
+.cube-top{background:linear-gradient(145deg,#fffef8,#e6d4ad)}
+.dice-cube-stage.is-rolling .dice-cube{animation:cube-roll-settle 1.05s cubic-bezier(.18,.72,.18,1) both}
+@keyframes cube-roll-settle{
+  0%{transform:rotateX(-12deg) rotateY(18deg) translateY(0) scale(.88)}
+  22%{transform:rotateX(170deg) rotateY(205deg) translateY(-15px) scale(1.13)}
+  48%{transform:rotateX(385deg) rotateY(430deg) translateY(-8px) scale(1.08)}
+  76%{transform:rotateX(610deg) rotateY(700deg) translateY(-2px) scale(1.02)}
+  100%{transform:rotateX(-12deg) rotateY(18deg) translateY(0) scale(1)}
+}
+@media(max-width:800px){.dice-cube{--cube-size:60px}.cube-face{padding:9px}.cube-face .pip{width:6px;height:6px}}
