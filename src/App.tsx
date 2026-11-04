@@ -313,6 +313,39 @@ function App() {
       <circle cx={x*40+20} cy={y*40+20} r="4" fill="#fff8e8"/>
     </g>
   }
+  if (location.hostname === 'game.neshanchi.ir') {
+    return <main dir="rtl" style={{minHeight:'100vh',background:'radial-gradient(circle at 15% 10%,#315b58 0,transparent 34%),linear-gradient(145deg,#071b25,#102e35 58%,#173b3b)',color:'#fff4dc',fontFamily:'Vazirmatn,Tahoma,sans-serif',padding:'28px 20px',display:'flex',flexDirection:'column'}}>
+      <header style={{maxWidth:1050,width:'100%',margin:'0 auto',display:'flex',alignItems:'center',gap:14}}>
+        <img src="/icon.svg" alt="BM" style={{width:64,height:64,borderRadius:18}}/>
+        <div><strong style={{fontSize:23,letterSpacing:3}}>BM</strong><div style={{fontSize:12,color:'#d8bd7c'}}>BARAN MENCH</div></div>
+        <span style={{marginRight:'auto',fontSize:12,color:'#e4d6b4'}}>بازی منچ باران</span>
+      </header>
+      <section style={{maxWidth:1050,width:'100%',margin:'auto',padding:'70px 0',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(280px,1fr))',alignItems:'center',gap:38}}>
+        <div>
+          <div style={{color:'#e2bd70',fontSize:13,fontWeight:800}}>یک دورهمی با حال‌وهوای ایرانی</div>
+          <h1 style={{fontSize:'clamp(38px,7vw,68px)',lineHeight:1.35,margin:'18px 0',fontWeight:900}}>تاس را بینداز،<br/><span style={{color:'#e2bd70'}}>هیجان را شروع کن!</span></h1>
+          <p style={{fontSize:16,lineHeight:2,color:'#d4dfd3',maxWidth:520}}>منچ باران، تجربه‌ای تازه از بازی محبوب دورهمی؛ با چهار رنگ، تاس سه‌بعدی، بازی با دوستان و حال‌وهوای نقش‌های ایرانی.</p>
+          <div style={{display:'flex',gap:12,flexWrap:'wrap',marginTop:30}}>
+            <a href="https://play.neshanchi.ir/" style={{background:'linear-gradient(135deg,#e6c477,#b88b43)',color:'#182b2a',padding:'15px 28px',borderRadius:14,fontWeight:900,textDecoration:'none'}}>ورود به بازی 🎲</a>
+            <a href="#features" style={{border:'1px solid #ffffff55',color:'#fff4dc',padding:'15px 24px',borderRadius:14,textDecoration:'none'}}>آشنایی با بازی</a>
+          </div>
+          <div style={{display:'flex',gap:18,flexWrap:'wrap',marginTop:30,fontSize:12,color:'#d9d2bc'}}><span>● ۱ تا ۴ بازیکن</span><span>● بازی آنلاین و محلی</span><span>● ۱۰ طرح ایرانی</span></div>
+        </div>
+        <div style={{minHeight:300,display:'grid',placeItems:'center',position:'relative'}}>
+          <div style={{width:230,height:230,borderRadius:48,background:'linear-gradient(145deg,#fff3d7,#d5bd88)',display:'grid',placeItems:'center',fontSize:125,color:'#a64e43',transform:'rotate(-9deg)',boxShadow:'22px 25px 0 #06151c,0 35px 70px #0007'}}>⚄</div>
+          <span style={{position:'absolute',top:12,right:'12%',fontSize:46,color:'#dfbd78'}}>✦</span><span style={{position:'absolute',bottom:8,left:'12%',fontSize:42,color:'#5ab18b'}}>●</span>
+        </div>
+      </section>
+      <section id="features" style={{maxWidth:1050,width:'100%',margin:'0 auto 45px',display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(190px,1fr))',gap:14}}>
+        {[
+          ['🎲','منچ کلاسیک','قوانین آشنای بازی با تجربه‌ای تازه'],
+          ['🌿','نقش‌های ایرانی','انتخاب از میان ده طرح الهام‌گرفته از هنر ایرانی'],
+          ['👥','بازی با دوستان','ساخت اتاق و دعوت از دوستان با لینک و کد'],
+        ].map(([icon,title,desc])=><article key={title} style={{background:'#ffffff10',border:'1px solid #ffffff20',borderRadius:18,padding:20}}><div style={{fontSize:28}}>{icon}</div><strong style={{display:'block',margin:'10px 0'}}>{title}</strong><span style={{fontSize:12,lineHeight:1.9,color:'#cbd7ce'}}>{desc}</span></article>)}
+      </section>
+      <footer style={{maxWidth:1050,width:'100%',margin:'auto auto 0',borderTop:'1px solid #ffffff25',paddingTop:20,display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',fontSize:11,color:'#c5cbbd'}}><span>BM · baran-mench</span><strong>© تمامی حقوق این اثر متعلق به باران عبدی است.</strong></footer>
+    </main>
+  }
   return <main className="app-shell" data-theme={themeId} data-dice={diceStyle}>{gameStarted && <div className="start-flash"><strong>BM · BARAN MENCH</strong></div>}
     <header className="topbar"><div className="brand"><img className="brand-logo" src="/icon.svg" alt="BM baran-mench" /><div><strong>BM</strong><small>baran-mench</small></div></div><div className="top-actions"><span className="online-pill"><i/> {onlineSocket ? (isSpectator ? 'تماشاگر آنلاین' : 'بازی آنلاین') : 'بازی محلی'}</span><button className="icon-button" onClick={newInvite} aria-label="دعوت دوستان"><Share2 size={18}/></button></div></header>
     <section className="hero"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> دورهمی با رنگ‌وبوی ایرانی</span><h1>یک تاس، چهار رنگ،<br/><em>یک عالمه هیجان!</em></h1><p>منچ کلاسیک با حال‌وهوای تازه، برای بازی کنار خانواده و دوستان.</p><div className="hero-tags"><span>۴ مهره برای هر نفر</span><span>۱ تا ۴ بازیکن</span><span>هوش مصنوعی</span></div></div><div className="hero-art"><div className="sunburst">✦</div><div className="art-dice"><span>⚄</span></div><div className="art-token red"/><div className="art-token gold"/><div className="art-token green"/><div className="art-token blue"/></div></section>
