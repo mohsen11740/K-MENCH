@@ -31,9 +31,9 @@ jobs:
       - name: Create Windows icon from BM logo
         shell: pwsh
         run: |
-          python -m pip install --quiet cairosvg pillow
+          npm install --no-save sharp png-to-ico
           New-Item -ItemType Directory -Force build | Out-Null
-          python -c "import cairosvg; from PIL import Image; cairosvg.svg2png(url='assets/logo.svg', write_to='build/icon.png', output_width=256, output_height=256); Image.open('build/icon.png').save('build/icon.ico', sizes=[(256,256),(128,128),(64,64),(32,32),(16,16)])"
+          node --input-type=module -e "import sharp from 'sharp'; import pngToIco from 'png-to-ico'; import { writeFile } from 'node:fs/promises'; const png = await sharp('assets/logo.svg').resize(256,256).png().toBuffer(); await writeFile('build/icon.ico', await pngToIco(png));"
       - name: Build Windows portable EXE
         run: npm run desktop:build
       - name: Upload Windows app
