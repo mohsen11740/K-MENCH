@@ -248,3 +248,64 @@
 .app-shell:has(.control-card) .board-wrap{border-width:10px;padding:9px;background-size:100% 100%,cover}
 .app-shell:has(.control-card) .side-panel{background-image:linear-gradient(180deg,#4b291ceF,#21130fF2),url('/art/wood-grain.svg');background-size:cover,260px 120px;background-blend-mode:normal,soft-light}
 @media(max-width:800px){.app-shell:has(.control-card) .board-wrap{border-width:8px;padding:7px}}
+
+
+/* BM ART FIX v2: keep the custom artwork above all theme and match-screen rules */
+.app-shell .hero{
+  background-color:#14251f!important;
+  background-image:linear-gradient(115deg,#10251fdd,#14251fee),url('/art/wood-grain.svg?v=2')!important;
+  background-size:cover,260px 120px!important;
+  background-repeat:no-repeat,repeat!important;
+}
+.app-shell .art-dice{
+  background-image:url('/art/dice-gold.svg?v=2')!important;
+  background-position:center!important;background-size:contain!important;background-repeat:no-repeat!important;
+  background-color:transparent!important;border:0!important;box-shadow:none!important;color:transparent!important;
+  filter:drop-shadow(13px 17px 0 #0b1712) drop-shadow(0 16px 22px #0007)!important;
+}
+.app-shell .board-card{
+  background-image:linear-gradient(135deg,#fffaf0ed,#f3e8d0e8),url('/art/board-paper.svg?v=2')!important;
+  background-size:auto,180px 180px!important;
+}
+.app-shell .board-wrap{
+  background-color:#d9bd88!important;
+  background-image:url('/art/persian-wood-frame.svg?v=2'),url('/art/board-paper.svg?v=2')!important;
+  background-size:100% 100%,cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat,repeat!important;
+  background-origin:border-box,padding-box!important;
+  background-clip:border-box,padding-box!important;
+  border:12px solid transparent!important;
+  border-radius:22px!important;
+  padding:12px!important;
+  box-shadow:0 16px 34px #160d08a6,inset 0 0 0 2px #f8df9a!important;
+}
+.app-shell:has(.control-card) .board-wrap{
+  background-color:#d9bd88!important;
+  background-image:url('/art/persian-wood-frame.svg?v=2'),url('/art/board-paper.svg?v=2')!important;
+  background-size:100% 100%,cover!important;
+  background-position:center!important;
+  background-repeat:no-repeat,repeat!important;
+  background-origin:border-box,padding-box!important;
+  background-clip:border-box,padding-box!important;
+  border:12px solid transparent!important;
+  padding:10px!important;
+  box-shadow:0 18px 38px #120904b8,inset 0 0 0 2px #ffe4a0!important;
+}
+.app-shell .side-panel{
+  background-image:linear-gradient(180deg,#4b291ceF,#21130fF2),url('/art/wood-grain.svg?v=2')!important;
+  background-size:cover,260px 120px!important;
+  background-blend-mode:normal,soft-light!important;
+}
+.app-shell .cube-face{
+  background-image:linear-gradient(145deg,#ffffff35,#00000012),url('/art/board-paper.svg?v=2')!important;
+  background-size:cover,46px 46px!important;
+  background-blend-mode:soft-light,overlay!important;
+  border:2px solid #fff0c2!important;
+  box-shadow:inset 0 2px 5px #ffffff88,inset 0 -5px 8px #29170e30,0 5px 10px #24150d55!important;
+}
+.app-shell[data-dice="wood"] .cube-face{background-image:linear-gradient(145deg,#ffffff20,#00000025),url('/art/wood-grain.svg?v=2')!important}
+.app-shell[data-dice="gold"] .cube-face,.app-shell[data-dice="royal"] .cube-face,.app-shell[data-dice="persian"] .cube-face{background-image:linear-gradient(145deg,#ffffff30,#00000010),url('/art/dice-gold.svg?v=2')!important}
+@media(max-width:800px){
+  .app-shell:has(.control-card) .board-wrap{border-width:10px!important;padding:7px!important}
+}
