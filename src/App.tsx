@@ -56,6 +56,8 @@ function App() {
   const [message, setMessage] = useState('برای شروع، تاس بیندازید.')
   const [winner, setWinner] = useState<number|null>(null)
   const [gameStarted, setGameStarted] = useState(false)
+  const [screen, setScreen] = useState<'menu'|'setup'|'game'>('menu')
+  const [showContact, setShowContact] = useState(false)
   const [inviteCode, setInviteCode] = useState('')
   const [showInvite, setShowInvite] = useState(false)
   const [onlineRoom, setOnlineRoom] = useState<any>(null)
@@ -196,6 +198,7 @@ function App() {
     setDice(room.dice ?? null); setWinner(room.status === 'finished' ? room.currentTurn : null)
     if (room.status === 'finished') setMessage(room.teamMode ? `${room.winnerTeam || (room.currentTurn % 2 === 0 ? room.teamName : 'تیم رقیب')} برنده بازی تیمی شد!` : `${mapped[room.currentTurn]?.name || 'بازیکن'} برنده بازی شد!`)
     setGameStarted(room.status === 'playing' || room.status === 'finished')
+    setScreen(room.status === 'playing' || room.status === 'finished' ? 'game' : 'setup')
   }
   const connectOnline = (code: string, role: 'player'|'spectator' = 'player') => {
     reconnectEnabledRef.current = true
@@ -244,11 +247,11 @@ function App() {
     localStorage.setItem('k-mench-player-name', chosenNames[0])
     localStorage.setItem('k-mench-player-names', JSON.stringify(chosenNames))
     setPlayers(makePlayers(humanCount)); setTokens(freshTokens()); setTurn(0); setDice(null)
-    setWinner(null); setGameStarted(true); setMessage('نوبت بازیکن قرمز است. تاس بیندازید.')
+    setWinner(null); setGameStarted(true); setScreen('game'); setMessage('نوبت بازیکن قرمز است. تاس بیندازید.')
   }
   useEffect(() => {
     const params = new URLSearchParams(location.search); const code = params.get('invite')?.toUpperCase(); const role = params.get('spectate') === '1' ? 'spectator' : 'player'
-    if (code && /^[A-HJ-NP-Z2-9]{6}$/.test(code)) connectOnline(code, role)
+    if (code && /^[A-HJ-NP-Z2-9]{6}$/.test(code)) { setScreen('setup'); connectOnline(code, role) }
     return () => { reconnectEnabledRef.current = false; if (reconnectTimerRef.current) window.clearTimeout(reconnectTimerRef.current) }
   }, [])
   useEffect(() => { if (!gameStarted || winner !== null || players.length === 0 || players[turn]?.human || rolling || dice !== null) return
@@ -392,7 +395,17 @@ function App() {
       <footer style={{maxWidth:1050,width:'100%',margin:'auto auto 0',borderTop:'1px solid #ffffff25',paddingTop:20,display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',fontSize:11,color:'#c5cbbd'}}><span>BM · baran-mench</span><strong>© تمامی حقوق این اثر متعلق به باران عبدی است.</strong></footer>
     </main>
   }
-  return <main className="app-shell" data-theme={themeId} data-dice={diceStyle}>{gameStarted && <div className="start-flash"><strong>BM · BARAN MENCH</strong></div>}
+  if (screen === 'menu' && !gameStarted) return <main className="bm-menu-screen" dir="rtl">
+    <div className="bm-menu-frame">
+      <div className="bm-menu-corner bm-corner-tl">✦</div><div className="bm-menu-corner bm-corner-tr">✦</div><div className="bm-menu-corner bm-corner-bl">✦</div><div className="bm-menu-corner bm-corner-br">✦</div>
+      <div className="bm-menu-brand"><div className="bm-menu-emblem"><img src="/icon.svg" alt="BM"/></div><span className="bm-menu-kicker">یک دورهمی به‌یادماندنی</span><h1>بازی منچ <b>باران</b></h1><p>BM · BARAN MENCH</p></div>
+      <div className="bm-menu-board-art" aria-hidden="true"><div className="bm-menu-die">⚄</div><i className="bm-orb orb-red"/><i className="bm-orb orb-gold"/><i className="bm-orb orb-green"/><i className="bm-orb orb-blue"/></div>
+      <div className="bm-menu-actions"><button className="bm-menu-button bm-menu-primary" onClick={()=>setScreen('setup')}><span>♟</span><b>شروع بازی</b><small>بازی تازه و انتخاب بازیکنان</small></button><button className="bm-menu-button" onClick={()=>{void newInvite()}}><span>♜</span><b>بازی آنلاین</b><small>دعوت دوستان و ساخت اتاق</small></button><button className="bm-menu-button bm-menu-contact" onClick={()=>setShowContact(true)}><span>✉</span><b>ارتباط با من</b><small>درباره بازی و سازنده</small></button></div>
+      <div className="bm-menu-footer"><span>چهار رنگ · شانزده مهره · یک رقابت شیرین</span><b>© باران عبدی</b></div>
+    </div>
+    {showContact && <div className="bm-contact-backdrop" onClick={()=>setShowContact(false)}><section className="bm-contact-panel" onClick={e=>e.stopPropagation()}><button onClick={()=>setShowContact(false)} aria-label="بستن">×</button><span>✉</span><h2>ارتباط با من</h2><p>بازی منچ باران با عشق به دورهمی‌های خانوادگی ساخته شده است.</p><small>صاحب اثر: باران عبدی</small><button className="bm-contact-share" onClick={()=>{if(navigator.share) void navigator.share({title:'بازی منچ باران',text:'بازی منچ باران، ساخته باران عبدی',url:location.origin}).catch(()=>{});else if(navigator.clipboard) void navigator.clipboard.writeText(location.origin)}}>اشتراک‌گذاری راه ارتباطی</button></section></div>}
+  </main>
+  return <main className={`app-shell screen-${screen}`} data-theme={themeId} data-dice={diceStyle}>{gameStarted && <div className="start-flash"><strong>BM · BARAN MENCH</strong></div>}
     <header className="topbar"><div className="brand"><img className="brand-logo" src="/icon.svg" alt="BM baran-mench" /><div><strong>BM</strong><small>baran-mench</small></div></div><div className="top-actions"><span className="online-pill"><i/> {onlineSocket ? (isSpectator ? 'تماشاگر آنلاین' : 'بازی آنلاین') : 'بازی محلی'}</span><button className="icon-button" onClick={newInvite} aria-label="دعوت دوستان"><Share2 size={18}/></button></div></header>
     <section className="hero"><div className="hero-copy"><span className="eyebrow"><Sparkles size={14}/> دورهمی با رنگ‌وبوی ایرانی</span><h1>یک تاس، چهار رنگ،<br/><em>یک عالمه هیجان!</em></h1><p>منچ کلاسیک با حال‌وهوای تازه، برای بازی کنار خانواده و دوستان.</p><div className="hero-tags"><span>۴ مهره برای هر نفر</span><span>۱ تا ۴ بازیکن</span><span>هوش مصنوعی</span></div></div><div className="hero-art"><div className="sunburst">✦</div><div className="art-dice"><span>⚄</span></div><div className="art-token red"/><div className="art-token gold"/><div className="art-token green"/><div className="art-token blue"/></div></section>
     <section className="game-layout">
