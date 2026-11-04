@@ -157,3 +157,77 @@
 .move-history span{flex:1}
 .move-history small{color:#9a907a;font-size:9px}
 @media(max-width:520px){.join-request{gap:5px}.join-request .chat-send{font-size:9px;padding:7px}.team-stat-grid>div{padding:8px}}
+
+
+/* BM wooden-gold game edition: immersive match screen */
+.app-shell:has(.control-card){max-width:none;min-height:100svh;padding:0 22px;background:radial-gradient(ellipse at 50% 48%,#254a50 0,#102e37 58%,#071923 100%);color:#f7e6bd;overflow-x:hidden}
+.app-shell:has(.control-card) .topbar{height:64px;border-bottom:1px solid #bd8747;background:linear-gradient(180deg,#4b291c,#25140f);padding:0 18px;box-shadow:0 5px 18px #0008}
+.app-shell:has(.control-card) .brand strong,.app-shell:has(.control-card) .brand small{color:#f5d58c}
+.app-shell:has(.control-card) .online-pill{background:#183c3b;color:#e8d5a5;border:1px solid #b68b4e}
+.app-shell:has(.control-card) .icon-button{background:linear-gradient(145deg,#e6bd68,#8d5626);color:#301b10;border:1px solid #ffe2a0}
+.app-shell:has(.control-card) .hero,.app-shell:has(.control-card) .features,.app-shell:has(.control-card)>footer{display:none}
+.app-shell:has(.control-card) .game-layout{display:grid;grid-template-columns:minmax(0,1fr) 300px;align-items:center;gap:18px;margin:14px auto;max-width:1500px;min-height:calc(100svh - 92px)}
+.app-shell:has(.control-card) .board-card{background:linear-gradient(145deg,#633820,#2c1a13 55%,#754624);border:3px solid #d6a452;border-radius:25px;padding:14px;box-shadow:inset 0 0 0 3px #f4d48b55,0 18px 48px #0008}
+.app-shell:has(.control-card) .section-heading{margin:0 0 8px}
+.app-shell:has(.control-card) .section-heading .eyebrow,.app-shell:has(.control-card) .section-heading h2{color:#f7dfaa}
+.app-shell:has(.control-card) .turn-label{background:#29180f;color:#ffdf9c;border-color:#d2a052}
+.app-shell:has(.control-card) .board-wrap{width:min(100%,min(76svh,760px));max-width:none;aspect-ratio:1;margin:auto;padding:10px;border-radius:24px;background:linear-gradient(145deg,#f1d39a,#754326 18%,#3c2419 50%,#d6a55a 84%,#5b321d);border:5px ridge #d8aa60;box-shadow:inset 0 0 0 4px #4a2818,0 15px 35px #0009}
+.app-shell:has(.control-card) .board{border-radius:13px;filter:drop-shadow(0 4px 7px #28150d55)}
+.app-shell:has(.control-card) .board-legend{margin-top:8px;color:#f2d9a3}
+.app-shell:has(.control-card) .board-legend span{color:#f5dfb5}
+.app-shell:has(.control-card) .side-panel{align-self:center;width:100%}
+.app-shell:has(.control-card) .control-card{background:linear-gradient(155deg,#613a25,#2a180f 62%,#754a2c);border:2px solid #d6a452;border-radius:22px;padding:17px;color:#f8e4b7;box-shadow:inset 0 0 0 3px #f5d48a38,0 16px 35px #0007}
+.app-shell:has(.control-card) .control-card h2{color:#ffe0a0}
+.app-shell:has(.control-card) .control-card p{color:#e7d2ad}
+.app-shell:has(.control-card) .control-card .player-name-list{background:#2b190f;border-color:#a8783c}
+.app-shell:has(.control-card) .control-card .player-name-list>strong,.app-shell:has(.control-card) .control-card .field-label{color:#f3d89f}
+.app-shell:has(.control-card) .control-card .player-name-input{background:#f7e8c8;border-color:#c99b57;color:#392316}
+.app-shell:has(.control-card) .count-picker button,.app-shell:has(.control-card) .theme-options button,.app-shell:has(.control-card) .dice-options button{background:linear-gradient(145deg,#75472b,#351e13);border:1px solid #c9974e;color:#ffe2a6}
+.app-shell:has(.control-card) .count-picker button.selected,.app-shell:has(.control-card) .theme-options button.chosen,.app-shell:has(.control-card) .dice-options button.chosen{background:linear-gradient(145deg,#f4d17c,#9c6128);color:#321b0d;border-color:#fff0b2}
+.app-shell:has(.control-card) .primary-button{background:linear-gradient(145deg,#ffe49a,#d49a3e 55%,#8e4e1c);border:2px solid #fff0bd;color:#32190c;box-shadow:0 5px 0 #653416,0 9px 18px #0005;font-size:15px}
+.app-shell:has(.control-card) .dice-face{background:transparent;border:0;box-shadow:none}
+.app-shell:has(.control-card) .dice-center{filter:drop-shadow(0 0 15px #f5bd4d)}
+.app-shell:has(.control-card) .dice-cube{filter:drop-shadow(0 8px 8px #1d120d88)}
+.app-shell:has(.control-card) .mini-stats{display:none}
+.app-shell:has(.control-card) .sound-toggle{width:100%;margin-top:9px;border:1px solid #bd914f;border-radius:12px;background:#321d13;color:#f6d99e;padding:9px;font:inherit;font-size:11px;cursor:pointer}
+.app-shell:has(.control-card) .player-scoreboard,.app-shell:has(.control-card) .live-team-stats,.app-shell:has(.control-card) .social-card:not(.player-scoreboard),.app-shell:has(.control-card) .features,.app-shell:has(.control-card)>footer{display:none}
+.app-shell:has(.setup-card) .setup-card{background:linear-gradient(155deg,#74452b,#321d14 62%,#754a2c);border:2px solid #d7aa61;color:#f9e5b8;box-shadow:inset 0 0 0 3px #f6d58b40,0 18px 40px #0007}
+.app-shell:has(.setup-card) .setup-card h2{color:#ffe3a6}
+.app-shell:has(.setup-card) .setup-card p{color:#e9d2a8}
+.app-shell:has(.setup-card) .count-picker button{min-height:64px;border-radius:16px;font-size:25px;background:linear-gradient(145deg,#75472b,#351e13);border:1px solid #d6a452;color:#ffe3a6}
+.app-shell:has(.setup-card) .count-picker button.selected{background:linear-gradient(145deg,#f4d17c,#9c6128);color:#321b0d;border-color:#fff0b2}
+.app-shell:has(.setup-card) .seat{color:#f4dfb3}
+@media(max-width:800px){
+ .app-shell:has(.control-card){position:fixed;inset:0;width:100%;height:100svh;min-height:0;padding:0;overflow:hidden}
+ .app-shell:has(.control-card) .topbar{height:48px;padding:0 10px}
+ .app-shell:has(.control-card) .brand-logo{width:34px;height:34px}
+ .app-shell:has(.control-card) .brand strong{font-size:13px}
+ .app-shell:has(.control-card) .brand small{font-size:8px}
+ .app-shell:has(.control-card) .online-pill{font-size:9px;padding:5px 8px}
+ .app-shell:has(.control-card) .game-layout{position:absolute;inset:48px 0 0;display:flex;flex-direction:column;justify-content:center;gap:0;margin:0;min-height:0;width:100%;padding:4px 0 118px}
+ .app-shell:has(.control-card) .board-card{width:100%;height:100%;min-height:0;border:0;border-radius:0;padding:3px 7px;background:transparent;box-shadow:none;display:flex;flex-direction:column;justify-content:center}
+ .app-shell:has(.control-card) .section-heading{display:flex;margin:0 8px 5px}
+ .app-shell:has(.control-card) .section-heading h2{font-size:12px}
+ .app-shell:has(.control-card) .section-heading .eyebrow{display:none}
+ .app-shell:has(.control-card) .turn-label{font-size:9px;padding:5px 8px}
+ .app-shell:has(.control-card) .board-wrap{width:min(94vw,calc(100svh - 195px));max-height:calc(100svh - 195px);padding:6px;border-width:4px;border-radius:19px}
+ .app-shell:has(.control-card) .board-legend{gap:10px;margin:5px 0 0}
+ .app-shell:has(.control-card) .board-legend span{font-size:9px}
+ .app-shell:has(.control-card) .side-panel{position:fixed;z-index:8;left:0;right:0;bottom:0;width:100%;padding:7px 10px max(9px,env(safe-area-inset-bottom));background:linear-gradient(180deg,#4b291c,#21130f);border-top:3px solid #d6a452;box-shadow:0 -8px 25px #0008}
+ .app-shell:has(.control-card) .control-card{padding:7px 10px;border-radius:13px;background:transparent;border:0;box-shadow:none;display:grid;grid-template-columns:1fr auto;align-items:center;gap:4px 10px}
+ .app-shell:has(.control-card) .control-card>.eyebrow,.app-shell:has(.control-card) .control-card .in-game-name,.app-shell:has(.control-card) .control-card .dice-face{display:none}
+ .app-shell:has(.control-card) .control-card h2{font-size:13px;margin:0;color:#ffe1a0}
+ .app-shell:has(.control-card) .control-card p{font-size:10px;margin:0;line-height:1.5;grid-column:1}
+ .app-shell:has(.control-card) .control-card .primary-button{grid-column:2;grid-row:1/3;width:auto;min-width:135px;padding:12px;font-size:12px}
+ .app-shell:has(.control-card) .control-card .sound-toggle{grid-column:1/-1;margin:2px 0 0;padding:5px;font-size:9px}
+ .app-shell:has(.control-card) .control-card .join-request-list{grid-column:1/-1;max-height:90px;overflow:auto}
+ .app-shell:has(.control-card) .control-card .mini-stats{display:none}
+ .app-shell:has(.setup-card){min-height:100svh;padding:0 10px}
+ .app-shell:has(.setup-card) .game-layout{display:flex;flex-direction:column;margin:10px auto;min-height:calc(100svh - 70px);max-width:560px}
+ .app-shell:has(.setup-card) .board-card{display:none}
+ .app-shell:has(.setup-card) .side-panel{width:100%}
+ .app-shell:has(.setup-card) .setup-card{padding:16px;border-radius:20px}
+ .app-shell:has(.setup-card) .setup-card h2{font-size:20px}
+ .app-shell:has(.setup-card) .theme-options{max-height:100px}
+}
+@media(prefers-reduced-motion:reduce){.app-shell:has(.control-card) .dice-cube-stage.is-rolling .dice-cube{animation:none}}
